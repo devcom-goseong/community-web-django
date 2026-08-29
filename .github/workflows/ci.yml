@@ -1,20 +1,13 @@
 name: CI
 
-# Only runs when the Django service actually changes. Editing an HTML page on
-# the public site should not spend a runner minute on Postgres.
+# Everything in this repository is the application, so there are no path
+# filters. There were, inherited from the repository this was extracted from,
+# and they pointed at directories that do not exist here - which meant no push
+# ever matched and only a manual dispatch ran anything.
 on:
   push:
     branches: [main]
-    paths:
-      - "server/**"
-      - "css/**"
-      - "js/**"
-      - "assets/**"
-      - ".github/workflows/applications.yml"
   pull_request:
-    paths:
-      - "server/**"
-      - ".github/workflows/applications.yml"
   workflow_dispatch:
 
 env:
