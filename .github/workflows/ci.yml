@@ -82,10 +82,12 @@ jobs:
       - name: Test
         run: python manage.py test --verbosity 2
 
+  # Also runs on a manual dispatch, so the image can be rebuilt on demand and
+  # so the build is exercised without having to invent a commit.
   image:
     name: Build and publish the image
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -125,7 +127,7 @@ jobs:
   deploy:
     name: Deploy to the VPS
     needs: image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     # Skips cleanly until the four secrets below exist, so the workflow is
     # green from the first push rather than red until someone sets up a server.
