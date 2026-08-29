@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="About &middot; Kyungdong University" heading="A community built on purpose" lead="Not a group chat that grew by accident. Before we opened the doors we agreed what this is, who it is for, how it is run and who is responsible for what." %}
+
+  <section class="section" aria-labelledby="origin-title">
+    <div class="wrap split">
+      <div class="split__aside">
+        <div class="plate"><h2 class="plate__title" id="origin-title">How it started</h2></div>
+      </div>
+      <div class="split__body">
+        <div class="prose">
+          <p>
+            A small group of students at {{ site.university }} kept running into the same
+            problem: plenty of people around them were learning to build things, and no
+            good way for any of them to find each other. So they started this.
+          </p>
+          <p>
+            The obvious version of that idea would have stopped at the campus gates. It
+            did not, because the problem does not. Someone teaching themselves to code
+            alone has the same problem whether they are in Goseong or anywhere else, and
+            a community small enough to be useful is not made smaller by letting them in.
+          </p>
+          <p>
+            What came out of those first few weeks was a plan rather than a slogan: which
+            activities to run, how the community would be managed, who is responsible for
+            what, and what had to exist before opening the doors. It is still changing as
+            the community grows, which is the point.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--flush-top" aria-labelledby="mission-title">
+    <div class="wrap split">
+      <div class="split__aside">
+        <div class="plate"><h2 class="plate__title" id="mission-title">What we are for</h2></div>
+      </div>
+      <div class="split__body">
+        <p class="pull pull--wide">
+          Different levels of experience, different interests, and not all of them
+          from the same campus.
+        </p>
+        <div class="prose mt-8">
+          <p>
+            We want to be genuinely open and genuinely organised at the same time. Those
+            two things pull against each other, and most student groups quietly give up on
+            one of them. Our answer is a light joining process and a clear structure.
+          </p>
+          <p>Before anyone joins, they should be able to find out:</p>
+        </div>
+        <ul class="ticks ticks--cols mt-6">
+          <li>What the community actually is</li>
+          <li>What they can expect from it</li>
+          <li>What is expected from them</li>
+          <li>What behaviour is acceptable</li>
+          <li>How activities are organised</li>
+          <li>How they can contribute</li>
+          <li>Who to contact when they need help</li>
+        </ul>
+        <p class="muted measure mt-6">
+          That is what this website is for. If something on it is unclear, that is a fault
+          worth telling us about.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--flush-top" aria-labelledby="values-title">
+    <div class="wrap">
+      <div class="plate">
+        <h2 class="plate__title plate__title--wide" id="values-title">What we hold each other to</h2>
+      </div>
+      <div class="grid mt-8">
+        {% for value in values %}
+          <article class="card">
+            <h3 class="card__title">{{ value.title }}</h3>
+            <p class="card__text">{{ value.body }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--flush-top" aria-labelledby="structure-title">
+    <div class="wrap">
+      <div class="plate">
+        <h2 class="plate__title plate__title--wide" id="structure-title">How the work is divided</h2>
+      </div>
+      <p class="muted measure mt-6">
+        Four areas of responsibility. They describe the work rather than the people doing
+        it: members move between them, and an area can be held by one person or shared by
+        several. Everyone is expected to contribute where they can, because the community
+        should not depend entirely on any one person.
+      </p>
+      <div class="people mt-8">
+        {% for area in areas %}
+          <article class="person">
+            <div>
+              <h4 class="person__name">{{ area.name }}</h4>
+              {% if area.subtitle %}<span class="person__role">{{ area.subtitle }}</span>{% endif %}
+            </div>
+            <div class="person__body">
+              {% include "partials/bullets.html" with bullets=area.bullet_list %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--flush-top" aria-labelledby="membership-title">
+    <div class="wrap">
+      <div class="plate">
+        <h2 class="plate__title plate__title--wide" id="membership-title">Who can join, and how</h2>
+      </div>
+      <p class="lead mt-6">
+        Students at {{ site.university }}, and any other developer who wants to learn or
+        build something with other people. Any level of experience, technical or not.
+      </p>
+      <p class="muted measure mt-5">
+        There is a short joining process. It exists so the community stays a place where
+        people know what is happening &mdash; not to keep anyone out.
+      </p>
+      <ol class="steps mt-8">
+        {% for step in steps %}
+          <li class="step"><h3>{{ step.title }}</h3><p>{{ step.body }}</p></li>
+        {% endfor %}
+      </ol>
+      {% if rules_page %}
+        <p class="mt-8">
+          <a class="link-arrow" href="{{ rules_page.get_absolute_url }}">Read the community rules</a>
+        </p>
+      {% endif %}
+    </div>
+  </section>
+
+  {% include "partials/band.html" with band_title="Now you know what you are joining." band_text="If that sounds like something you want to be part of — or if you have a question about any of it — the same form gets you to us." %}
+{% endblock %}

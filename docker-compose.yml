@@ -1,0 +1,57 @@
+# Local development. One command and you have the service and a database:
+#
+#   cp .env.example .env      # fill in at least DJANGO_SECRET_KEY
+#   docker compose up --build
+#
+# Then http://localhost:8000/admin/ after creating a superuser:
+#
+#   docker compose exec web python manage.py createsuperuser
+#
+# Email is written to the console by default here, so nothing is sent while
+# you are developing. Set DJANGO_EMAIL_BACKEND to the SMTP backend in .env if
+# you want to test real delivery.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kdu}
+      POSTGRES_USER: ${POSTGRES_USER:-kdu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kdu-dev-password}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kdu} -d ${POSTGRES_DB:-kdu}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py createcachetable &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --reload"
+    environment:
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-development-key}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DJANGO_EMAIL_BACKEND: ${DJANGO_EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
+      DATABASE_URL: postgres://${POSTGRES_USER:-kdu}:${POSTGRES_PASSWORD:-kdu-dev-password}@db:5432/${POSTGRES_DB:-kdu}
+      PUBLIC_SITE_ORIGINS: ${PUBLIC_SITE_ORIGINS:-http://localhost:3000,https://dev-comm.netlify.app}
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://dev-comm.netlify.app}
+      GMAIL_USER: ${GMAIL_USER:-}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
+      TEAM_INBOX: ${TEAM_INBOX:-}
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

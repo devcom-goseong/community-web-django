@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Getting started &middot; Learning" heading="Where to start" lead=page_description %}
+
+  <section class="section">
+    <div class="wrap split">
+      <div class="split__aside">
+        <nav class="doc__toc" aria-label="On this page">
+          {% for group in groups %}<a href="#{{ group.anchor }}">{{ group.heading }}</a>{% endfor %}
+        </nav>
+      </div>
+      <div class="split__body doc">
+        <p class="lead">
+          This is not a syllabus. It is a handful of places worth your first hour, chosen
+          because they are free, well maintained, and unlikely to disappear.
+        </p>
+        {% for group in groups %}
+          <section id="{{ group.anchor }}">
+            <h2>{{ group.heading }}</h2>
+            {% if group.body %}<p>{{ group.body }}</p>{% endif %}
+            {% if group.links.all %}
+              <ul class="ticks">
+                {% for link in group.links.all %}
+                  {% if link.published %}
+                    <li><a href="{{ link.url }}">{{ link.title }}</a>{% if link.note %} &mdash; {{ link.note }}{% endif %}</li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </section>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

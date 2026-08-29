@@ -1,0 +1,141 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>{% block title %}{{ page_title }} — {{ site.community_name }}{% endblock %}</title>
+<meta name="description" content="{{ page_description }}">
+<link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ site.community_name }}">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="{{ page_title }} — {{ site.community_name }}">
+<meta property="og:description" content="{{ page_description }}">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'assets/images/og-image.png' %}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The {{ site.community_name }} mark: an ink-drawn hand reaching up out of a solid black band.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ page_title }} — {{ site.community_name }}">
+<meta name="twitter:description" content="{{ page_description }}">
+<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'assets/images/og-image.png' %}">
+
+<link rel="icon" href="{% static 'assets/favicon/favicon.ico' %}" sizes="32x32">
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/favicon/favicon-32.png' %}">
+<link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/favicon/favicon-16.png' %}">
+<link rel="apple-touch-icon" href="{% static 'assets/favicon/apple-touch-icon.png' %}">
+<meta name="theme-color" content="#0d0d0d">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..600&amp;display=swap">
+
+<link rel="stylesheet" href="{% static 'css/variables.css' %}">
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+<link rel="stylesheet" href="{% static 'css/components.css' %}">
+{% block extra_css %}{% endblock %}
+<script src="{% static 'js/site.js' %}" defer></script>
+{% block extra_js %}{% endblock %}
+</head>
+
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap wrap--wide site-header__inner">
+    <a class="brand" href="{% url 'content:home' %}" aria-label="{{ site.community_name }} — home">
+      <img class="brand__mark" src="{% static 'assets/images/logo-mark.png' %}" width="320" height="38" alt="" aria-hidden="true">
+      <span class="brand__text"><span>KDU Developer</span><span>Community</span></span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span>Menu</span>
+      <span class="nav-toggle__bars" aria-hidden="true"></span>
+    </button>
+
+    <nav class="site-nav" id="site-nav" data-open="false" aria-label="Primary">
+      <ul class="nav__list">
+        <li><a class="nav__link" href="{% url 'content:about' %}"{% if nav == 'about' %} aria-current="page"{% endif %}>About</a></li>
+        <li><a class="nav__link" href="{% url 'content:activities' %}"{% if nav == 'activities' %} aria-current="page"{% endif %}>Activities</a></li>
+        <li><a class="nav__link" href="{% url 'content:page' 'start' %}"{% if nav == 'start' %} aria-current="page"{% endif %}>Start here</a></li>
+        <li><a class="nav__link nav__link--cta" href="{% url 'content:join' %}"{% if nav == 'join' %} aria-current="page"{% endif %}>Join</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="wrap wrap--wide">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <a class="brand" href="{% url 'content:home' %}">
+          <img class="brand__mark" src="{% static 'assets/images/logo-mark-inverse.png' %}" width="320" height="38" alt="" aria-hidden="true">
+          <span class="brand__text"><span>KDU Developer</span><span>Community</span></span>
+        </a>
+        <p class="footer__blurb">{{ site.footer_blurb }}</p>
+
+        <p class="footer__heading mt-7">Platforms</p>
+        <ul class="footer__list">
+          {% for platform in site.platforms %}
+            <li>
+              {% if platform.url %}<a href="{{ platform.url }}">{{ platform.name }}</a>
+              {% else %}<span>{{ platform.name }}</span> <span class="footer__soon">Soon</span>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <nav aria-labelledby="footer-explore">
+        <p class="footer__heading" id="footer-explore">Explore</p>
+        <ul class="footer__list">
+          <li><a href="{% url 'content:home' %}">Home</a></li>
+          <li><a href="{% url 'content:about' %}">About</a></li>
+          <li><a href="{% url 'content:activities' %}">Activities</a></li>
+          <li><a href="{% url 'content:join' %}">Join or contact</a></li>
+          <li><a href="{% url 'content:contents' %}">Everything on this site</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-labelledby="footer-start">
+        <p class="footer__heading" id="footer-start">Getting started</p>
+        <ul class="footer__list">
+          <li><a href="{% url 'content:page' 'start' %}">Your first month</a></li>
+          <li><a href="{% url 'content:interests' %}">What you can get into</a></li>
+          <li><a href="{% url 'content:resources' %}">Where to start</a></li>
+          <li><a href="{% url 'content:faq' %}">Questions</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-labelledby="footer-community">
+        <p class="footer__heading" id="footer-community">The community</p>
+        <ul class="footer__list">
+          <li><a href="{% url 'content:page' 'rules' %}">Community rules</a></li>
+          <li><a href="{% url 'content:page' 'terms' %}">Terms</a></li>
+          <li><a href="{% url 'content:page' 'privacy' %}">Privacy notice</a></li>
+          <li><a href="{% url 'content:page' 'accessibility' %}">Accessibility</a></li>
+          <li><a href="{% url 'content:page' 'contribute' %}">Help build this site</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="footer__bottom">
+      <p>&copy; <span data-current-year>2026</span> {{ site.community_name }}</p>
+      <nav class="footer__legal" aria-label="Policies">
+        <a href="{% url 'content:page' 'rules' %}">Rules</a>
+        <a href="{% url 'content:page' 'terms' %}">Terms</a>
+        <a href="{% url 'content:page' 'privacy' %}">Privacy</a>
+      </nav>
+      <p>Built by the founding team</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

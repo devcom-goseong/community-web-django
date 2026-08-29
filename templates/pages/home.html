@@ -1,0 +1,132 @@
+{% extends "base.html" %}{% load static %}
+
+{% block content %}
+  <section class="hero">
+    <div class="wrap wrap--wide hero__inner">
+      <p class="hero__eyebrow caption">{{ site.university }} &middot; {{ site.country }} &middot; Founded {{ site.founded }}</p>
+      <h1 class="hero__title">{{ site.community_name }}</h1>
+      <p class="hero__lead">
+        Students at {{ site.university }} and any other developer who wants to learn,
+        build and finish things alongside other people &mdash; programmers, designers, AI and
+        data people, writers and organisers.
+      </p>
+      <div class="hero__actions">
+        <a class="btn" href="{% url 'content:join' %}">Join the community</a>
+        <a class="btn btn--ghost" href="{% url 'content:about' %}">What we are building</a>
+      </div>
+    </div>
+
+    <picture>
+      <source srcset="{% static 'assets/images/hand.webp' %}" type="image/webp">
+      <img class="hero__hand" src="{% static 'assets/images/hand.png' %}" width="894" height="1200"
+           alt="" aria-hidden="true" fetchpriority="high" decoding="async">
+    </picture>
+
+    <div class="hero__ground"></div>
+  </section>
+
+  <section class="section section--tight" aria-label="At a glance">
+    <div class="wrap">
+      <dl class="facts">
+        {% for fact in facts %}<div><dt>{{ fact.label }}</dt><dd>{{ fact.value }}</dd></div>{% endfor %}
+      </dl>
+    </div>
+  </section>
+
+  <section class="section section--flush-top" aria-labelledby="mission-title">
+    <div class="wrap split">
+      <div class="split__aside">
+        <div class="plate"><h2 class="plate__title" id="mission-title">Why this community exists</h2></div>
+      </div>
+      <div class="split__body">
+        <p class="pull pull--wide">
+          Organised enough that everyone knows what is happening, open enough that
+          anyone can walk in.
+        </p>
+        <div class="prose mt-8">
+          <p>
+            Plenty of students at KDU are teaching themselves to code, sketching product
+            ideas, or quietly working on something interesting on their own. What was
+            missing was an obvious place to find each other. This is that place.
+          </p>
+          <p>
+            The community is run by students, for students, and it is open to developers
+            outside the university too. A leadership team keeps the rules, the platforms and
+            the activities in place so that anyone who joins knows what to expect.
+          </p>
+          <p>
+            We would rather be small and useful than large and noisy. Activities start at a
+            size we can genuinely run, and grow as more people step forward to take
+            responsibility for them.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--flush-top" aria-labelledby="offer-title">
+    <div class="wrap">
+      <div class="plate">
+        <h2 class="plate__title plate__title--wide" id="offer-title">What we do for each other</h2>
+      </div>
+      <div class="grid grid--4 mt-8">
+        {% for card in cards %}
+          <article class="card">
+            {% include "partials/icon.html" with icon=card.icon %}
+            <h3 class="card__title">{{ card.title }}</h3>
+            <p class="card__text">{{ card.body }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--flush-top" aria-labelledby="rhythm-title">
+    <div class="wrap split">
+      <div class="split__aside">
+        <div class="plate">
+          <h2 class="plate__title" id="rhythm-title">What a term looks like</h2>
+          <p class="plate__note small">
+            Not everything starts at once. We begin with the weekly meeting and the study
+            groups, and add the rest as the community can carry them.
+          </p>
+          <p class="mt-6"><a class="link-arrow" href="{% url 'content:activities' %}">All activities</a></p>
+        </div>
+      </div>
+      <div class="split__body">
+        <ul class="roster">
+          {% for item in activities %}
+            <li>
+              <a class="roster__name" href="{{ item.get_absolute_url }}">{{ item.name }}</a>
+              <span class="roster__meta">{{ item.cadence }}{% if item.extra_tag %} &middot; {{ item.extra_tag }}{% endif %}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--flush-top" aria-labelledby="who-title">
+    <div class="wrap split">
+      <div class="split__aside">
+        <div class="plate"><h2 class="plate__title" id="who-title">Not only for programmers</h2></div>
+      </div>
+      <div class="split__body">
+        <p class="lead">
+          One project usually needs five different kinds of person. If only one of them
+          shows up, the project does not get made.
+        </p>
+        <ul class="ticks ticks--cols mt-7">
+          {% for area in interests %}<li>{{ area.name }} &mdash; {{ area.subtitle }}</li>{% endfor %}
+        </ul>
+        <p class="muted measure mt-7">
+          You do not have to be a KDU student, and you do not have to be technical. If you
+          are not sure where you fit, say exactly that on the form.
+          <a href="{% url 'content:interests' %}">More about the areas</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {% include "partials/band.html" %}
+{% endblock %}

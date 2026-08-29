@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Activities" heading=activity.name lead=activity.summary %}
+
+  <section class="section">
+    <div class="wrap split">
+      <div class="split__aside">
+        <p class="tag{% if activity.cadence_is_primary %} tag--ink{% endif %}">{{ activity.cadence }}</p>
+        {% if activity.extra_tag %}<p class="tag mt-4">{{ activity.extra_tag }}</p>{% endif %}
+        <p class="footer__heading mt-7">Other activities</p>
+        <nav class="doc__toc mt-5" aria-label="Other activities">
+          {% for other in others %}<a href="{{ other.get_absolute_url }}">{{ other.name }}</a>{% endfor %}
+        </nav>
+        <p class="mt-7"><a class="link-arrow" href="{% url 'content:activities' %}">All activities</a></p>
+      </div>
+
+      <div class="split__body doc">
+        {% for section in activity.sections.all %}
+          {% if section.note_title %}
+            <div class="note mt-6">
+              <p class="note__title">{{ section.note_title }}</p>
+              {% for paragraph in section.paragraphs %}<p class="small muted mt-4">{{ paragraph }}</p>{% endfor %}
+              {% include "partials/bullets.html" with bullets=section.bullet_list columns=section.bullets_in_columns top="mt-5" %}
+            </div>
+          {% else %}
+            <h2>{{ section.heading }}</h2>
+            {% for paragraph in section.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+            {% include "partials/bullets.html" with bullets=section.bullet_list columns=section.bullets_in_columns %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {% include "partials/band.html" %}
+{% endblock %}

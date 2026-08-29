@@ -1,0 +1,181 @@
+{% extends "base.html" %}{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/form.css' %}">{% endblock %}
+{% block extra_js %}<script src="{% static 'js/form.js' %}" defer></script>{% endblock %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Join &middot; Contact" heading="Tell us who you are" lead="One form does both jobs: apply for membership, or ask a question before you decide. Either way it reaches the same inbox and a person on the leadership team reads it." %}
+
+  <section class="section" aria-labelledby="form-title">
+    <div class="wrap split">
+
+      <div class="split__aside">
+        <div class="plate"><h2 class="plate__title" id="form-title">After you send it</h2></div>
+
+        <ul class="ticks mt-6">
+          {% for step in steps %}<li>{{ step.body }}</li>{% endfor %}
+        </ul>
+
+        <div class="note mt-7">
+          <p class="note__title">What we do with your details</p>
+          <p class="small muted mt-4">
+            Your application is stored so the leadership team can review it, and emailed to
+            the community inbox. It is not shared with anyone outside that team, and we
+            delete it whenever you ask.
+            <a href="{% url 'content:page' 'privacy' %}">The privacy notice</a> says exactly
+            what happens to it.
+          </p>
+        </div>
+
+        <div class="note mt-7">
+          <p class="note__title">Read these before you apply</p>
+          <p class="small muted mt-4">Joining means agreeing to all three. They are short.</p>
+          <ul class="ticks mt-5">
+            <li><a href="{% url 'content:page' 'rules' %}">Community rules</a> &mdash; what we expect from each other</li>
+            <li><a href="{% url 'content:page' 'terms' %}">Terms</a> &mdash; applying, membership and your work</li>
+            <li><a href="{% url 'content:page' 'privacy' %}">Privacy notice</a> &mdash; what happens to what you send</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="split__body">
+        <noscript>
+          <div class="note mb-6">
+            <p class="note__title">JavaScript is switched off</p>
+            <p class="small muted mt-4">
+              The form still works. Instead of confirming here on the page, it will open a
+              short confirmation page after you send it.
+            </p>
+          </div>
+        </noscript>
+
+        <form class="form" id="join-form" method="post" action="{{ endpoint }}" novalidate>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend">Why are you writing<span class="req">&nbsp;*</span></legend>
+            <div class="choices choices--row">
+              <label class="choice"><input type="radio" name="intent" value="join" checked> <span>I want to join</span></label>
+              <label class="choice"><input type="radio" name="intent" value="question"> <span>I have a question</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend">About you</legend>
+            <div class="fields fields--2">
+              <div class="field" data-field="name">
+                <label class="field__label" for="name">Full name<span class="req">&nbsp;*</span></label>
+                <input class="input" type="text" id="name" name="name" required maxlength="120"
+                       autocomplete="name" aria-describedby="name-error">
+                <p class="field__error" id="name-error">Please tell us your name.</p>
+              </div>
+              <div class="field" data-field="email">
+                <label class="field__label" for="email">Email<span class="req">&nbsp;*</span></label>
+                <input class="input" type="email" id="email" name="email" required maxlength="160"
+                       autocomplete="email" inputmode="email" aria-describedby="email-error">
+                <p class="field__error" id="email-error">Please enter an email address we can reply to.</p>
+              </div>
+            </div>
+
+            <div class="fields fields--2 mt-5">
+              <div class="field">
+                <span class="field__label" id="student-label">Are you a {{ site.university }} student?</span>
+                <div class="choices choices--inline" role="group" aria-labelledby="student-label">
+                  <label class="choice"><input type="radio" name="student" value="yes" checked> <span>Yes</span></label>
+                  <label class="choice"><input type="radio" name="student" value="no"> <span>No</span></label>
+                  <label class="choice"><input type="radio" name="student" value="soon"> <span>Starting soon</span></label>
+                </div>
+              </div>
+              <div class="field">
+                <label class="field__label" for="studentId">Student ID <span class="opt">(optional)</span></label>
+                <input class="input" type="text" id="studentId" name="studentId" maxlength="40"
+                       autocomplete="off" aria-describedby="studentId-hint">
+                <p class="field__hint" id="studentId-hint">Only if you have it to hand.</p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend">What are you interested in <span class="opt">(choose any)</span></legend>
+            <div class="choices">
+              {% for area in interests %}
+                <label class="choice">
+                  <input type="checkbox" name="interests" value="{{ area.name }}"> <span>{{ area.name }}</span>
+                </label>
+              {% endfor %}
+              <label class="choice"><input type="checkbox" name="interests" value="Not sure yet"> <span>Not sure yet</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend">Your message</legend>
+            <div class="field" data-field="message">
+              <label class="field__label" for="message">
+                A few lines about you <span class="opt">(or your question)</span>
+              </label>
+              <textarea class="textarea" id="message" name="message" maxlength="2000" rows="6"
+                        aria-describedby="message-hint message-error"></textarea>
+              <p class="field__hint" id="message-hint">
+                What you are learning, what you would like to build, or what you want to ask.
+              </p>
+              <p class="field__error" id="message-error">Please write your question so we can answer it.</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend">Before you send<span class="req">&nbsp;*</span></legend>
+
+            <div class="field field--consent" data-field="agree">
+              <label class="consent">
+                <input type="checkbox" id="agree" name="agree" value="yes" required aria-describedby="agree-error">
+                <span>
+                  I have read the <a href="{% url 'content:page' 'rules' %}">community rules</a>, the
+                  <a href="{% url 'content:page' 'terms' %}">terms</a> and the
+                  <a href="{% url 'content:page' 'privacy' %}">privacy notice</a>, and I agree to them.
+                </span>
+              </label>
+              <p class="field__error" id="agree-error">Please read the three documents and tick to agree.</p>
+            </div>
+
+            <div class="field field--consent mt-5" data-field="consent">
+              <label class="consent">
+                <input type="checkbox" id="consent" name="consent" value="yes" required aria-describedby="consent-error">
+                <span>
+                  I agree to be contacted by the {{ site.community_name }} about my message or
+                  application, and I understand my details stay with the leadership team.
+                </span>
+              </label>
+              <p class="field__error" id="consent-error">We need your agreement before we can write back.</p>
+            </div>
+          </fieldset>
+
+          <div class="hp" aria-hidden="true">
+            <label for="website">Leave this field empty</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+          </div>
+          <input type="hidden" name="ts" id="ts" value="0">
+
+          <div class="form__actions">
+            <button class="btn" type="submit" id="submit">
+              <span class="btn__label">Send it</span>
+              <span class="btn__label-busy">Sending&hellip;</span>
+            </button>
+            <p class="form__note">
+              Fields marked <span aria-hidden="true">*</span><span class="visually-hidden">with an asterisk</span>
+              are required.
+            </p>
+          </div>
+
+          <div class="form__status" id="form-status" data-state="idle" role="status" aria-live="polite">
+            <span class="form__status-mark" id="status-mark" aria-hidden="true"></span>
+            <div>
+              <p class="form__status-title" id="status-title"></p>
+              <p class="form__status-text" id="status-text"></p>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  {% include "partials/band.html" with band_title="Still deciding?" band_text="Read what the community is for and what actually happens week to week, then come back to this page." band_cta="See the activities" %}
+{% endblock %}

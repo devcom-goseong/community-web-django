@@ -1,0 +1,84 @@
+# Production, on a VPS we control.
+#
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Requires a .env next to this file. See .env.example, and README.md for the
+# one-time TLS certificate step, which has to happen before nginx can start
+# with the HTTPS server block.
+#
+# The image is pulled from GHCR rather than built here, so a deploy is a pull
+# and a restart rather than a build on a small server.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Never published to the host. Only the app can reach it.
+    expose:
+      - "5432"
+
+  web:
+    image: ${APP_IMAGE:-ghcr.io/devcom-goseong/community-web-django:latest}
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py createcachetable &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000
+             --workers ${GUNICORN_WORKERS:-2} --threads 4 --timeout 30
+             --access-logfile - --error-logfile -"
+    env_file: .env
+    environment:
+      DJANGO_DEBUG: "0"
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      # nginx terminates TLS and already redirects, so gunicorn must not
+      # redirect again or health checks over plain HTTP will loop.
+      DJANGO_SECURE_SSL_REDIRECT: "0"
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    environment:
+      APP_HOST: ${APP_HOST}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    depends_on:
+      - web
+
+  # Renews the certificate twice a day and exits between attempts. nginx has
+  # to be reloaded afterwards; the README explains the cron line for that.
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: >
+      sh -c "trap exit TERM;
+             while :; do certbot renew --webroot -w /var/www/certbot --quiet;
+             sleep 12h & wait $${!}; done"
+
+volumes:
+  pgdata:
+  certbot-conf:
+  certbot-www:

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Getting started &middot; Areas" heading="What you can get into" lead=page_description %}
+
+  <section class="section">
+    <div class="wrap">
+      <p class="lead">
+        These are the boxes on the application form. They are not departments and nothing
+        stops you moving between them &mdash; most people end up in two or three.
+      </p>
+
+      <div class="people mt-8">
+        {% for area in interests %}
+          <article class="person">
+            <div>
+              <h4 class="person__name">{{ area.name }}</h4>
+              {% if area.subtitle %}<span class="person__role">{{ area.subtitle }}</span>{% endif %}
+            </div>
+            <div class="person__body">
+              {% include "partials/bullets.html" with bullets=area.bullet_list %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+
+      <p class="muted measure mt-8">
+        Not sure? That is one of the options on the form, and picking it is not a problem.
+      </p>
+      <p class="mt-6"><a class="link-arrow" href="{% url 'content:join' %}">Apply to join</a></p>
+    </div>
+  </section>
+{% endblock %}

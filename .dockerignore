@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+*.sqlite3
+db.sqlite3
+staticfiles/
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.git/
+.gitignore
+README.md
+docker-compose*.yml

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="The site &middot; Index" heading="Everything on this site" lead=page_description %}
+
+  <section class="section">
+    <div class="wrap wrap--narrow doc">
+      <section>
+        <h2>The community</h2>
+        <ul class="ticks">
+          <li><a href="{% url 'content:home' %}">Home</a></li>
+          <li><a href="{% url 'content:about' %}">About</a></li>
+          <li><a href="{% url 'content:activities' %}">Activities</a></li>
+          <li><a href="{% url 'content:join' %}">Join or contact</a></li>
+        </ul>
+      </section>
+      <section>
+        <h2>The activities in detail</h2>
+        <ul class="ticks">
+          {% for item in activities %}
+            <li><a href="{{ item.get_absolute_url }}">{{ item.name }}</a> &mdash; {{ item.cadence|lower }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section>
+        <h2>Getting started</h2>
+        <ul class="ticks">
+          <li><a href="{% url 'content:page' 'start' %}">Your first month</a></li>
+          <li><a href="{% url 'content:interests' %}">What you can get into</a></li>
+          <li><a href="{% url 'content:resources' %}">Where to start</a></li>
+          <li><a href="{% url 'content:faq' %}">Questions</a></li>
+        </ul>
+      </section>
+      <section>
+        <h2>What you agree to, and the site itself</h2>
+        <ul class="ticks">
+          {% for item in pages %}
+            <li><a href="{{ item.get_absolute_url }}">{{ item.title }}</a> &mdash; {{ item.lead|truncatewords:14 }}</li>
+          {% endfor %}
+          <li><a href="{% url 'content:contents' %}">Everything on this site</a> &mdash; this page</li>
+        </ul>
+      </section>
+    </div>
+  </section>
+{% endblock %}

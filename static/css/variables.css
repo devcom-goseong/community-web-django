@@ -1,0 +1,181 @@
+/* =============================================================================
+   KDU Developer Community — Design tokens
+   -----------------------------------------------------------------------------
+   Every colour, font and measurement the site uses is declared here.
+   Change a value in this file and it changes everywhere. Nothing in the HTML
+   or the other stylesheets hard-codes a colour.
+
+   >>> COLOUR VALUES BELOW ARE PLACEHOLDERS — REPLACE THEM <<<
+   They are a sensible working greyscale (a near-black, a near-white and five
+   grey steps) so the site looks finished today. Swap the seven values in
+   "1. GREY RAMP" for the final palette and the whole site follows; the
+   semantic tokens in section 2 are derived from them and should not need
+   editing unless you want to change which grey does which job.
+
+   Rule for this project: greyscale only. No hue, no gradients, no accents.
+   ========================================================================== */
+
+:root {
+
+  /* ---------------------------------------------------------------------------
+     1. GREY RAMP — placeholder, replace
+     The only place raw colour values appear. Ordered light to dark.
+     ------------------------------------------------------------------------ */
+  --grey-000: #ffffff;   /* placeholder — paper white, used for cards      */
+  --grey-050: #f2f2f2;   /* placeholder — page background                  */
+  --grey-100: #e6e6e6;   /* placeholder — alternate surface / fills        */
+  --grey-200: #d4d4d4;   /* placeholder — hairline rules and borders       */
+  --grey-400: #a3a3a3;   /* placeholder — strong borders, disabled text    */
+  --grey-500: #8a8a8a;   /* placeholder — faint text on light              */
+  --grey-600: #6a6a6a;   /* placeholder — muted body text                  */
+  --grey-800: #2b2b2b;   /* placeholder — emphasis grey (buttons, marks)   */
+  --grey-900: #141414;   /* placeholder — body text                        */
+  --grey-950: #0d0d0d;   /* placeholder — ink, the darkest value           */
+
+  /* ---------------------------------------------------------------------------
+     2. SEMANTIC COLOUR — derived from the ramp above
+     ------------------------------------------------------------------------ */
+  --color-bg:            var(--grey-050);
+  --color-bg-alt:        var(--grey-100);
+  --color-surface:       var(--grey-000);
+  --color-surface-alt:   var(--grey-100);
+
+  --color-ink:           var(--grey-950);   /* near-black: bars, footer, logo  */
+  --color-text:          var(--grey-900);
+  --color-text-muted:    var(--grey-600);
+  --color-text-faint:    var(--grey-500);
+
+  --color-border:        var(--grey-200);
+  --color-border-strong: var(--grey-400);
+
+  --color-primary:       var(--grey-800);   /* emphasis grey — buttons, marks  */
+  --color-primary-hover: var(--grey-950);
+
+  /* on dark grounds (the ink bands and the footer) */
+  --color-on-dark:        var(--grey-050);
+  --color-on-dark-muted:  var(--grey-400);
+  --color-on-dark-faint:  var(--grey-600);
+  --color-border-on-dark: #3a3a3a;          /* placeholder — replace           */
+
+  --color-focus:         var(--grey-950);
+  --color-focus-on-dark: var(--grey-000);
+  --color-selection-bg:  var(--grey-900);
+  --color-selection-fg:  var(--grey-050);
+
+  /* validation states — greyscale only, meaning is carried by text + icon,
+     never by colour alone */
+  --color-invalid:       var(--grey-950);
+  --color-invalid-field: var(--grey-100);
+
+  /* ---------------------------------------------------------------------------
+     3. TYPEFACE
+     One face, EB Garamond, used for everything: headings, body, labels,
+     buttons, form fields. A book face has the range to do all of it, and a
+     page set in a single well-chosen type reads as considered rather than
+     assembled. Hierarchy comes from size, weight and italic - not from
+     switching family.
+     ------------------------------------------------------------------------ */
+  --font: "EB Garamond", Garamond, "Adobe Garamond Pro", "Palatino Linotype", Georgia, "Times New Roman", serif;
+
+  --weight-body: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-display: 500;
+  --weight-display-bold: 700;
+
+  /* ---------------------------------------------------------------------------
+     4. TYPE SCALE — fluid, clamped so it never runs away on very wide screens
+     ------------------------------------------------------------------------ */
+  /* Two hero sizes. Below 62rem the hand sits below the text, so the type can
+     run as wide as the screen. From 62rem up the hand occupies the right of the
+     composition, so the type is sized to always stop short of it.
+
+     --fs-hero-wide is not a guess. The longest line is "Community", set in the
+     Garamond italic, which measures 4.70x its own font size. The space left of
+     the hand narrows faster than the viewport does, so the safe size is a steep
+     line through those two constraints, capped before it can outgrow the hand
+     on very wide screens. Re-measure the ratio and redo this if the display
+     face ever changes - the italic is wider than the roman, so measure that. */
+  --fs-hero:     clamp(2.4rem, 8vw, 4.75rem);
+  --fs-hero-wide: clamp(2.6rem, 5.2vw, 4.75rem);
+  --fs-display:  clamp(2rem, 4.4vw, 3.1rem);
+  --fs-h2:       clamp(1.7rem, 3vw, 2.3rem);
+  --fs-h3:       clamp(1.35rem, 1.8vw, 1.65rem);
+  --fs-h4:       clamp(1.02rem, 1.2vw, 1.12rem);
+  --fs-lead:     clamp(1.2rem, 1.5vw, 1.45rem);
+  --fs-body:     1.1875rem;
+  --fs-small:    1.05rem;
+  --fs-caption:  0.875rem;
+  --fs-micro:    0.8125rem;
+
+  --lh-hero: 1.04;
+  --lh-display: 0.98;
+  --lh-heading: 1.12;
+  --lh-body: 1.6;
+  --lh-tight: 1.35;
+
+  --tracking-hero: -0.01em;
+  --tracking-display: -0.005em;
+  --tracking-caption: 0.1em;
+  --tracking-label: 0.06em;
+
+  /* ---------------------------------------------------------------------------
+     5. SPACE — 4px base
+     ------------------------------------------------------------------------ */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.75rem;
+  --space-8: 3.5rem;
+  --space-9: 4.5rem;
+  --space-10: 6rem;
+  --space-11: 8rem;
+  --space-12: 10rem;
+
+  --section-gap: clamp(4rem, 9vw, 8.5rem);
+
+  /* ---------------------------------------------------------------------------
+     6. LAYOUT
+     ------------------------------------------------------------------------ */
+  --wrap: 78rem;
+  --wrap-narrow: 44rem;
+  --wrap-wide: 92rem;
+  --gutter: clamp(1.25rem, 4.5vw, 4rem);
+  --header-h: 4.5rem;
+
+  /* ---------------------------------------------------------------------------
+     7. LINES, SHAPE, TEXTURE
+     Vintage print has sharp corners and hairlines. Radius stays at 0 by
+     design — raise it here if the identity ever softens.
+     ------------------------------------------------------------------------ */
+  --radius: 0px;
+  --radius-pill: 0px;
+  --hairline: 1px;
+  --rule: 1px solid var(--color-border);
+  --rule-strong: 1px solid var(--color-border-strong);
+  --rule-ink: 1px solid var(--color-ink);
+  --border-heavy: 2px;
+  --ground-h: clamp(3.5rem, 7vw, 6rem);   /* the black band under the hero */
+
+  /* Paper grain. Set --grain-opacity to 0 to remove the texture entirely. */
+  --grain-opacity: 0.055;
+  --grain-tile: 220px;
+
+  --focus-width: 2px;
+  --focus-offset: 3px;
+
+  /* ---------------------------------------------------------------------------
+     8. MOTION — all of it is disabled under prefers-reduced-motion
+     ------------------------------------------------------------------------ */
+  --ease: cubic-bezier(0.2, 0.6, 0.25, 1);
+  --dur-fast: 120ms;
+  --dur: 220ms;
+  --dur-slow: 420ms;
+
+  --z-grain: 90;
+  --z-header: 100;
+  --z-menu: 110;
+}

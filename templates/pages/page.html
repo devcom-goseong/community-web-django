@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow=page.eyebrow heading=page.title lead=page.lead %}
+
+  <section class="section">
+    <div class="wrap split">
+      <div class="split__aside">
+        <nav class="doc__toc" aria-label="On this page">
+          {% for section in page.sections.all %}<a href="#{{ section.anchor }}">{{ section.heading }}</a>{% endfor %}
+        </nav>
+      </div>
+
+      <div class="split__body doc">
+        {% if page.show_version %}
+          <div class="doc__meta caption">
+            <span>{{ page.version }}</span>
+            {% if page.reviewed_on %}<span>Last reviewed {{ page.reviewed_on|date:"j F Y" }}</span>{% endif %}
+          </div>
+        {% endif %}
+
+        {% if page.notice_title %}
+          <div class="note">
+            <p class="note__title">{{ page.notice_title }}</p>
+            <p class="small muted mt-4">{{ page.notice_body }}</p>
+          </div>
+        {% endif %}
+
+        {% if page.intro %}<p class="mt-7">{{ page.intro }}</p>{% endif %}
+
+        {% for section in page.sections.all %}
+          <section id="{{ section.anchor }}">
+            <h2>{{ section.heading }}</h2>
+            {% for paragraph in section.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+            {% include "partials/bullets.html" with bullets=section.bullet_list %}
+          </section>
+        {% endfor %}
+
+        <p class="mt-8"><a class="link-arrow" href="{% url 'content:join' %}">Apply to join</a></p>
+      </div>
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,171 @@
+name: CI
+
+# Only runs when the Django service actually changes. Editing an HTML page on
+# the public site should not spend a runner minute on Postgres.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "server/**"
+      - "css/**"
+      - "js/**"
+      - "assets/**"
+      - ".github/workflows/applications.yml"
+  pull_request:
+    paths:
+      - "server/**"
+      - ".github/workflows/applications.yml"
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+jobs:
+  test:
+    name: Lint and test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: kdu_test
+          POSTGRES_USER: kdu
+          POSTGRES_PASSWORD: kdu
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U kdu"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Long and varied so `check --deploy` exercises the real rule rather
+      # than tripping over the key itself. Not used anywhere real.
+      DJANGO_SECRET_KEY: ci-oNly-3f8Kq2Wm7ZbP1xLr9TvJc4YsHd6Ng0Ae5UiRk8Qz-not-a-real-secret
+      DJANGO_DEBUG: "0"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      # CI checks the settings module's production posture. In the real
+      # deployment nginx does the redirect instead, which is why the compose
+      # file turns this off there.
+      DJANGO_SECURE_SSL_REDIRECT: "1"
+      DJANGO_LOCMEM_CACHE: "1"
+      DATABASE_URL: postgres://kdu:kdu@localhost:5432/kdu_test
+      DJANGO_EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Django system checks, including the deployment ones
+        run: python manage.py check --deploy --fail-level WARNING
+
+      - name: Confirm no model change is missing a migration
+        run: python manage.py makemigrations --check --dry-run
+
+      # Proves the static pipeline works, which the tests deliberately do not
+      # depend on. A missing or unreadable asset fails here rather than at
+      # image build time.
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
+
+      - name: Test
+        run: python manage.py test --verbosity 2
+
+  image:
+    name: Build and publish the image
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Sign in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tags and labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to the VPS
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Skips cleanly until the four secrets below exist, so the workflow is
+    # green from the first push rather than red until someone sets up a server.
+    steps:
+      - name: Check the deploy secrets are present
+        id: secrets
+        run: |
+          if [ -n "${{ secrets.VPS_HOST }}" ] && [ -n "${{ secrets.VPS_USER }}" ] \
+             && [ -n "${{ secrets.VPS_SSH_KEY }}" ] && [ -n "${{ secrets.VPS_APP_DIR }}" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No VPS secrets set, so nothing was deployed. The image was still built and pushed. See README.md."
+          fi
+
+      - name: Pull the new image and restart
+        if: steps.secrets.outputs.ready == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.VPS_APP_DIR }}"
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            docker compose -f docker-compose.prod.yml pull web
+            docker compose -f docker-compose.prod.yml up -d
+            docker image prune -f
+
+      - name: Confirm the service came back
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          for attempt in $(seq 1 10); do
+            if curl -fsS --max-time 10 "https://${{ secrets.APP_HOST }}/healthz" >/dev/null; then
+              echo "healthy after ${attempt} attempt(s)"
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "::error::The service did not answer /healthz after the deploy."
+          exit 1

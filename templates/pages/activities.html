@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Activities &middot; What actually happens" heading="What we run" lead="These are the activities the community organises. They do not all start on the same day: we begin with the weekly meeting and the study groups, and add the others as there are people to carry them." %}
+
+  <section class="section" aria-labelledby="entries-title">
+    <div class="wrap">
+      <h2 class="visually-hidden" id="entries-title">Community activities</h2>
+      <div class="entries">
+        {% for item in activities %}
+          <article class="entry">
+            <div class="entry__aside">
+              <span class="tag{% if item.cadence_is_primary %} tag--ink{% endif %}">{{ item.cadence }}</span>
+              {% if item.extra_tag %}<span class="tag">{{ item.extra_tag }}</span>{% endif %}
+            </div>
+            <div class="entry__body">
+              <h3 class="entry__title"><a href="{{ item.get_absolute_url }}">{{ item.name }}</a></h3>
+              {% for paragraph in item.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+              {% include "partials/bullets.html" with bullets=item.index_bullet_list columns=1 %}
+              <p class="mt-6"><a class="link-arrow" href="{{ item.get_absolute_url }}">More about {{ item.name|lower }}</a></p>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+      <p class="muted measure mt-8">
+        This list will grow. Members can propose new activities at any time, and the ones
+        that survive review become real.
+      </p>
+    </div>
+  </section>
+
+  {% include "partials/band.html" with band_title="Pick one and turn up." band_text="You do not have to commit to everything. Come to a meeting, sit in a study group, or send in an idea and see what happens to it." %}
+{% endblock %}

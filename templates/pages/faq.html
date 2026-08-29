@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Questions &middot; Before you apply" heading="Questions" lead=page_description %}
+
+  <section class="section">
+    <div class="wrap split">
+      <div class="split__aside">
+        <nav class="doc__toc" aria-label="On this page">
+          {% for entry in entries %}<a href="#{{ entry.anchor }}">{{ entry.question }}</a>{% endfor %}
+        </nav>
+      </div>
+      <div class="split__body doc">
+        {% for entry in entries %}
+          <section id="{{ entry.anchor }}">
+            <h2>{{ entry.question }}</h2>
+            {% for paragraph in entry.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+          </section>
+        {% endfor %}
+        <p class="mt-8"><a class="link-arrow" href="{% url 'content:join' %}">Ask us something else</a></p>
+      </div>
+    </div>
+  </section>
+{% endblock %}
