@@ -49,20 +49,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Paper grain. One fixed layer, painted once, never repainted on scroll.
-   Turn it off by setting --grain-opacity: 0 in variables.css. */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-grain);
-  pointer-events: none;
-  opacity: var(--grain-opacity);
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-  background-size: var(--grain-tile) var(--grain-tile);
-}
-
 ::selection {
   background: var(--color-selection-bg);
   color: var(--color-selection-fg);
@@ -73,8 +59,7 @@ h1, h2, h3, h4 {
   font-family: var(--font);
   font-weight: var(--weight-display);
   line-height: var(--lh-heading);
-  letter-spacing: var(--tracking-display);
-  color: var(--color-ink);
+  color: var(--color-heading);
   text-wrap: balance;
 }
 
@@ -84,7 +69,6 @@ h3 { font-size: var(--fs-h3); }
 h4 {
   font-size: var(--fs-h4);
   font-weight: var(--weight-semibold);
-  letter-spacing: 0;
   line-height: var(--lh-tight);
 }
 
@@ -210,8 +194,6 @@ main { display: block; }
   font-family: var(--font);
   font-size: var(--fs-caption);
   font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-caption);
-  text-transform: uppercase;
   color: var(--color-text-muted);
   line-height: 1.4;
 }
@@ -247,8 +229,6 @@ main { display: block; }
   color: var(--color-on-dark);
   font-family: var(--font);
   font-size: var(--fs-caption);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
   text-decoration: none;
   padding: var(--space-3) var(--space-4);
 }

@@ -52,14 +52,18 @@
   font-family: var(--font);
   font-size: var(--fs-micro);
   font-weight: var(--weight-medium);
-  letter-spacing: 0.1em;
   line-height: 1.35;
-  text-transform: uppercase;
 }
 
 .brand__text span:last-child { color: var(--color-text-muted); }
 
 .brand:hover .brand__text span:last-child { color: var(--color-ink); }
+
+/* Below about 26rem the wordmark cannot sit on two lines without breaking
+   mid-word, so the mark carries the brand on its own. */
+@media (max-width: 26rem) {
+  .brand__text { display: none; }
+}
 
 /* --- Navigation ----------------------------------------------------------- */
 .nav__list {
@@ -73,8 +77,6 @@
   font-family: var(--font);
   font-size: var(--fs-caption);
   font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
   text-decoration: none;
   color: var(--color-text-muted);
   padding-block: var(--space-2);
@@ -105,17 +107,22 @@
 }
 
 /* --- Mobile menu ---------------------------------------------------------- */
+/* The menu button sits at the START of the header bar, not the end. With only
+   two items on the bar and space-between, that puts the menu on the left and
+   the mark on the right. The negative left margin pulls the button's own
+   padding back so its text lines up with the page gutter rather than sitting
+   indented from it. */
 .nav-toggle {
+  order: -1;
   display: none;
   align-items: center;
   gap: var(--space-2);
   font-family: var(--font);
   font-size: var(--fs-caption);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
   color: var(--color-ink);
   padding: var(--space-2);
-  margin-right: calc(var(--space-2) * -1);
+  margin-left: calc(var(--space-2) * -1);
+  border-radius: var(--radius-sm);
 }
 
 .nav-toggle__bars {
@@ -172,7 +179,6 @@
     font-family: var(--font);
     font-size: clamp(1.9rem, 8.5vw, 2.75rem);
     font-weight: var(--weight-display);
-    letter-spacing: var(--tracking-display);
     text-transform: none;
     color: var(--color-ink);
     border: 0;
@@ -222,23 +228,10 @@
   flex-wrap: wrap;
 }
 
-.hero__eyebrow::after {
-  content: "";
-  flex: 1 1 3rem;
-  max-width: 9rem;
-  height: 2px;
-  background: linear-gradient(
-    to right,
-    var(--color-accent-1) 0 33.34%,
-    var(--color-accent-2) 33.34% 66.67%,
-    var(--color-accent-3) 66.67% 100%
-  );
-}
 
 .hero__title {
   font-size: var(--fs-hero);
   line-height: var(--lh-hero);
-  letter-spacing: var(--tracking-hero);
   font-weight: var(--weight-display-bold);
   margin-top: var(--space-5);
   max-width: 15ch;
@@ -262,13 +255,11 @@
 
 .hero__hand {
   width: auto;
-  height: clamp(11rem, 34vw, 15rem);
-  /* The negative bottom margin lets the ink band (z-index 2) crop the wrist,
-     so the hand reads as rising out of the ground rather than standing on it.
-     The right margin lines it up with the text column above. */
-  margin: var(--space-7) var(--gutter) -0.5rem auto;
+  height: clamp(10rem, 30vw, 14rem);
+  margin: var(--space-7) var(--gutter) 0 auto;
   position: relative;
   z-index: 1;
+  opacity: 0.9;
 }
 
 .hero__ground {
@@ -327,34 +318,6 @@
    PLATE HEADINGS — the archive-plate device that opens every section
    ========================================================================== */
 
-/* The three dots above the angle brackets in the logo, reused as the section
-   marker. They are drawn rather than set in the markup so every existing
-   plate on the site picks them up, and they are decorative, so they stay out
-   of the accessibility tree. */
-.plate::before {
-  content: "";
-  display: block;
-  width: 3.05rem;
-  height: 0.55rem;
-  margin-bottom: var(--space-4);
-  background-image:
-    radial-gradient(circle at 50% 50%, var(--color-accent-1) 49%, transparent 51%),
-    radial-gradient(circle at 50% 50%, var(--color-accent-2) 49%, transparent 51%),
-    radial-gradient(circle at 50% 50%, var(--color-accent-3) 49%, transparent 51%);
-  background-size: 0.55rem 0.55rem;
-  background-position: left center, center center, right center;
-  background-repeat: no-repeat;
-}
-
-/* On the navy bands the green dot drops to 3.34:1 against the ground, so the
-   dots there are the two that hold up plus the paper cream. */
-.band .plate::before {
-  background-image:
-    radial-gradient(circle at 50% 50%, var(--color-primary-on-dark) 49%, transparent 51%),
-    radial-gradient(circle at 50% 50%, var(--color-accent-on-dark) 49%, transparent 51%),
-    radial-gradient(circle at 50% 50%, var(--color-on-dark) 49%, transparent 51%);
-}
-
 
 
 .plate__title {
@@ -377,15 +340,15 @@
   font-family: var(--font);
   font-size: var(--fs-caption);
   font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
   text-decoration: none;
-  padding: var(--space-4) var(--space-6);
-  border: 1px solid var(--color-ink);
-  background: var(--color-ink);
-  color: var(--color-on-dark);
-  border-radius: var(--radius);
-  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  padding: 0.7rem 1.4rem;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-sm);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 
 .btn::after {
@@ -400,25 +363,36 @@
 }
 
 .btn:hover {
-  background: transparent;
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow);
 }
 .btn:hover::after { transform: translateX(3px); }
 
-.btn--ghost { background: transparent; color: var(--color-ink); }
-.btn--ghost:hover { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+.btn--ghost {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+.btn--ghost:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  border-color: var(--color-primary-soft);
+  box-shadow: none;
+}
 
 .btn--on-dark {
-  background: var(--color-on-dark);
+  background: #ffffff;
   color: var(--color-ink);
-  border-color: var(--color-on-dark);
+  border-color: #ffffff;
 }
 
 .btn--on-dark:hover {
-  background: transparent;
-  color: var(--color-accent-on-dark);
-  border-color: var(--color-accent-on-dark);
+  background: var(--color-on-dark);
+  color: var(--color-ink);
+  border-color: var(--color-on-dark);
 }
 
 .btn--plain::after { display: none; }
@@ -435,8 +409,6 @@
   gap: var(--space-2);
   font-family: var(--font);
   font-size: var(--fs-caption);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
   text-decoration: none;
   color: var(--color-ink);
   border-bottom: 1px solid var(--color-border-strong);
@@ -473,7 +445,11 @@
   transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
 
-.card:hover { border-color: var(--color-primary); transform: translateY(-2px); }
+.card:hover {
+  border-color: var(--color-border);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
 .card:hover .card__icon { stroke: var(--color-primary); }
 
 .card__icon {
@@ -514,8 +490,6 @@
   font-family: var(--font);
   font-size: var(--fs-caption);
   font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
   color: var(--color-ink);
 }
 
@@ -602,15 +576,15 @@
   font-family: var(--font);
   font-size: var(--fs-micro);
   font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-caption);
-  text-transform: uppercase;
   color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
-  padding: 0.25rem 0.5rem;
+  background: var(--color-bg-alt);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.7rem;
   white-space: nowrap;
 }
 
-.tag--ink { color: var(--color-ink); border-color: var(--color-border-strong); }
+.tag--ink { color: var(--color-primary); background: var(--color-primary-soft); }
 
 .tag-list { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
@@ -661,7 +635,7 @@
   .step + .step { padding-left: var(--space-5); border-left: var(--rule); }
 }
 
-.step h3 { font-size: var(--fs-h4); font-family: var(--font); font-weight: var(--weight-semibold); letter-spacing: 0; }
+.step h3 { font-size: var(--fs-h4); font-family: var(--font); font-weight: var(--weight-semibold); }
 
 .step p { font-size: var(--fs-small); color: var(--color-text-muted); margin-top: var(--space-2); }
 
@@ -689,15 +663,12 @@
   font-family: var(--font);
   font-size: var(--fs-h3);
   font-weight: var(--weight-display-bold);
-  letter-spacing: var(--tracking-display);
 }
 
 .person__role {
   display: block;
   font-family: var(--font);
   font-size: var(--fs-micro);
-  letter-spacing: var(--tracking-caption);
-  text-transform: uppercase;
   color: var(--color-text-muted);
   margin-top: var(--space-2);
 }
@@ -713,8 +684,6 @@
   font-family: var(--font);
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
   fill: var(--color-text-muted);
 }
 
@@ -737,7 +706,6 @@
   font-size: var(--fs-h2);
   font-weight: var(--weight-display);
   line-height: 1.2;
-  letter-spacing: var(--tracking-display);
   color: var(--color-ink);
   max-width: 22ch;
 }
@@ -749,8 +717,6 @@
   font-family: var(--font);
   font-size: var(--fs-caption);
   font-style: normal;
-  letter-spacing: var(--tracking-caption);
-  text-transform: uppercase;
   color: var(--color-text-muted);
   margin-top: var(--space-5);
 }
@@ -759,12 +725,13 @@
    NOTE BLOCK — a bordered aside used for the idea-review criteria
    ========================================================================== */
 .note {
+  border-radius: var(--radius);
   border: 1px solid var(--color-border-strong);
   background: var(--color-surface);
   padding: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-.note__title { font-size: var(--fs-h4); font-family: var(--font); font-weight: var(--weight-semibold); letter-spacing: 0; }
+.note__title { font-size: var(--fs-h4); font-family: var(--font); font-weight: var(--weight-semibold); }
 
 .note--on-dark { background: transparent; border-color: var(--color-border-on-dark); }
 
@@ -810,8 +777,6 @@
   font-family: var(--font);
   font-size: var(--fs-micro);
   font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-caption);
-  text-transform: uppercase;
   color: var(--color-text-faint);
   margin-bottom: var(--space-4);
 }
@@ -826,15 +791,12 @@
 /* The account name beside a social link, when one is worth showing. */
 .footer__handle {
   font-size: var(--fs-micro);
-  letter-spacing: var(--tracking-label);
   color: var(--color-on-dark-faint);
 }
 
 .footer__soon {
   font-family: var(--font);
   font-size: var(--fs-micro);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
   color: var(--color-on-dark-faint);
   border: 1px solid var(--color-border-on-dark);
   padding: 0.1rem 0.4rem;
@@ -850,8 +812,6 @@
   border-top: 1px solid var(--color-border-on-dark);
   font-family: var(--font);
   font-size: var(--fs-micro);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
   color: var(--color-on-dark-faint);
 }
 
@@ -874,15 +834,12 @@
   font-family: var(--font);
   font-size: var(--fs-h3);
   font-weight: var(--weight-display-bold);
-  letter-spacing: var(--tracking-display);
   color: var(--color-ink);
 }
 
 .roster__meta {
   font-family: var(--font);
   font-size: var(--fs-micro);
-  letter-spacing: var(--tracking-caption);
-  text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
@@ -911,8 +868,6 @@
 .facts dt {
   font-family: var(--font);
   font-size: var(--fs-micro);
-  letter-spacing: var(--tracking-caption);
-  text-transform: uppercase;
   color: var(--color-text-faint);
   margin-bottom: var(--space-2);
 }
@@ -923,7 +878,6 @@
      line and the hairline rhythm across the strip stays even. */
   font-size: clamp(1.05rem, 1.5vw, 1.3rem);
   font-weight: var(--weight-display-bold);
-  letter-spacing: var(--tracking-display);
   color: var(--color-ink);
   line-height: 1.15;
 }
@@ -1004,7 +958,6 @@
   font-size: clamp(5rem, 22vw, 12rem);
   font-weight: var(--weight-display-bold);
   line-height: 0.85;
-  letter-spacing: var(--tracking-hero);
   color: var(--color-ink);
 }
 

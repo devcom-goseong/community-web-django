@@ -50,17 +50,15 @@ FACTS = [
 
 CARDS = [
     ("Learn together", "book",
-     "A weekly meeting with one topic, plus member-run study groups for programming, "
-     "data science, web, mobile and certification prep. Asking a basic question is normal here."),
+     "A weekly meeting, plus study groups for whatever you are learning. Asking a "
+     "basic question is normal here."),
     ("Build real things", "brackets",
-     "Submit an idea, find people whose skills complete yours, and ship something that exists "
-     "outside a tutorial. Teams need designers and writers as much as they need engineers."),
+     "Bring an idea, find people whose skills complete yours, and ship it. Teams need "
+     "designers and writers too."),
     ("Meet people", "network",
-     "One in-person meetup every month for workshops, hands-on sessions and plain conversation, "
-     "alongside guest speakers invited into the weekly discussion."),
+     "One meetup a month. Workshops, hands-on sessions, and guest speakers."),
     ("Show your work", "screen",
-     "Demo days give you a room, an audience and honest feedback — practice at presenting, a "
-     "portfolio piece, and often a collaborator you did not know you needed."),
+     "Demo days give you a room, an audience and honest feedback."),
 ]
 
 VALUES = [
