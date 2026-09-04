@@ -23,6 +23,7 @@ from .models import (
     ResourceGroup,
     ResponsibilityArea,
     SiteSettings,
+    SocialLink,
     Value,
 )
 
@@ -50,11 +51,6 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     fieldsets = (
         ("The community", {"fields": ("community_name", "university", "country", "founded")}),
         ("Footer", {"fields": ("footer_blurb",)}),
-        ("Platforms", {
-            "fields": ("discord_url", "whatsapp_url", "instagram_url", "github_url"),
-            "description": "Leave a link blank and the site shows a 'Soon' tag instead. "
-                           "Fill it in and it becomes a real link everywhere at once.",
-        }),
     )
 
     def has_add_permission(self, request):
@@ -130,6 +126,24 @@ class FactAdmin(PublishActionsMixin, admin.ModelAdmin):
     list_display = ("label", "value", "is_live", "order")
     list_editable = ("value", "order")
     list_filter = ("published",)
+
+
+@admin.register(SocialLink)
+class SocialLinkAdmin(PublishActionsMixin, admin.ModelAdmin):
+    list_display = ("name", "group", "url", "handle", "is_live", "order")
+    list_editable = ("url", "handle", "order")
+    list_filter = ("group", "published")
+    search_fields = ("name", "handle")
+    fieldsets = (
+        (None, {
+            "fields": ("name", "group", "url", "handle"),
+            "description": "Leave the address blank and the site lists the platform with a "
+                           "'Soon' badge instead of a link, which is better than a link that "
+                           "goes nowhere. Fill it in and it becomes a real link on every page "
+                           "at once.",
+        }),
+        ("Visibility", {"fields": ("published", "order")}),
+    )
 
 
 @admin.register(Value)

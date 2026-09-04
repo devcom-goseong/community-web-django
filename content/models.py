@@ -62,11 +62,6 @@ class SiteSettings(models.Model):
         help_text="Shown in the footer of every page.",
     )
 
-    discord_url = models.URLField(blank=True, default="", help_text="Leave blank to show 'Soon'.")
-    whatsapp_url = models.URLField(blank=True, default="", help_text="Leave blank to show 'Soon'.")
-    instagram_url = models.URLField(blank=True, default="", help_text="Leave blank to show 'Soon'.")
-    github_url = models.URLField(blank=True, default="https://github.com/devcom-goseong")
-
     class Meta:
         verbose_name = "site settings"
         verbose_name_plural = "site settings"
@@ -91,14 +86,56 @@ class SiteSettings(models.Model):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
 
+
+
+class SocialLink(ContentBase):
+    """Somewhere the community exists other than this site.
+
+    A model rather than a handful of URL fields on the settings row, so that
+    adding a platform is something the leadership team can do in the admin
+    instead of something that needs a migration and a deploy.
+
+    Two groups, because they answer different questions. "Where we talk" is
+    how a member reaches the community day to day; "Follow us" is where an
+    outsider sees what it is doing. A platform can honestly be either, so the
+    group is chosen per link rather than fixed per platform.
+    """
+
+    GROUP_CHAT = "chat"
+    GROUP_SOCIAL = "social"
+    GROUP_CHOICES = [
+        (GROUP_CHAT, "Where we talk"),
+        (GROUP_SOCIAL, "Follow us"),
+    ]
+
+    name = models.CharField(
+        max_length=40,
+        help_text="Shown as the link text. For example Facebook, LinkedIn, GitHub, "
+                  "Instagram, X, Discord, WhatsApp.",
+    )
+    url = models.URLField(
+        blank=True,
+        default="",
+        help_text="Leave blank to list the platform with a 'Soon' badge instead of a link.",
+    )
+    group = models.CharField(max_length=10, choices=GROUP_CHOICES, default=GROUP_SOCIAL)
+    handle = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+        help_text="Optional. The account name, if it is worth showing. For example @kdudev.",
+    )
+
+    class Meta(ContentBase.Meta):
+        verbose_name = "social link"
+        verbose_name_plural = "social links"
+
+    def __str__(self):
+        return self.name
+
     @property
-    def platforms(self):
-        return [
-            {"name": "Discord", "url": self.discord_url},
-            {"name": "WhatsApp", "url": self.whatsapp_url},
-            {"name": "Instagram", "url": self.instagram_url},
-            {"name": "GitHub", "url": self.github_url},
-        ]
+    def is_live(self):
+        return bool(self.url)
 
 
 class Page(ContentBase):

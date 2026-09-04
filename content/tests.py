@@ -2,7 +2,7 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .models import Activity, FaqEntry, Page, SiteSettings
+from .models import Activity, FaqEntry, Page, SiteSettings, SocialLink
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
@@ -68,16 +68,34 @@ class SeededSiteTests(TestCase):
         response = self.client.get(page.get_absolute_url())
         self.assertContains(response, "A heading edited in the admin")
 
-    def test_platform_links_follow_the_settings(self):
+    def test_a_link_with_no_address_shows_soon_rather_than_a_dead_link(self):
+        SocialLink.objects.create(name="Discord", group=SocialLink.GROUP_CHAT, url="")
         response = self.client.get(reverse("content:home"))
-        self.assertContains(response, "Soon", msg_prefix="an empty URL should show the Soon tag")
+        self.assertContains(response, "Soon")
+        self.assertNotContains(response, 'href=""')
 
-        site = SiteSettings.get()
-        site.discord_url = "https://discord.gg/example"
-        site.save()
+    def test_filling_in_an_address_makes_it_a_link_everywhere(self):
+        link = SocialLink.objects.create(name="Discord", group=SocialLink.GROUP_CHAT, url="")
+        link.url = "https://discord.gg/example"
+        link.save()
 
+        for page in ("content:home", "content:about", "content:join"):
+            with self.subTest(page=page):
+                self.assertContains(self.client.get(reverse(page)), "https://discord.gg/example")
+
+    def test_the_two_link_groups_are_listed_under_their_own_headings(self):
+        SocialLink.objects.create(name="WhatsApp", group=SocialLink.GROUP_CHAT,
+                                  url="https://example.org/w")
+        SocialLink.objects.create(name="LinkedIn", group=SocialLink.GROUP_SOCIAL,
+                                  url="https://example.org/l")
         response = self.client.get(reverse("content:home"))
-        self.assertContains(response, "https://discord.gg/example")
+        self.assertContains(response, "Where we talk")
+        self.assertContains(response, "Follow us")
+
+    def test_an_unpublished_link_is_not_shown(self):
+        SocialLink.objects.create(name="Facebook", group=SocialLink.GROUP_SOCIAL,
+                                  url="https://example.org/fb", published=False)
+        self.assertNotContains(self.client.get(reverse("content:home")), "https://example.org/fb")
 
     def test_site_settings_is_a_singleton(self):
         SiteSettings.objects.create(community_name="Another one")

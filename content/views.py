@@ -12,13 +12,17 @@ from .models import (
     ResourceGroup,
     ResponsibilityArea,
     SiteSettings,
+    SocialLink,
     Value,
 )
 
 
 def base_context(request, title, description, nav=""):
+    links = list(SocialLink.objects.live())
     return {
         "site": SiteSettings.get(),
+        "chat_links": [x for x in links if x.group == SocialLink.GROUP_CHAT],
+        "social_links": [x for x in links if x.group == SocialLink.GROUP_SOCIAL],
         "page_title": title,
         "page_description": description,
         "nav": nav,

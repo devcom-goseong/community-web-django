@@ -23,8 +23,23 @@ from content.models import (
     ResourceGroup,
     ResponsibilityArea,
     SiteSettings,
+    SocialLink,
     Value,
 )
+
+# Where the community exists other than this site. The addresses are left
+# blank on purpose: the site shows a "Soon" badge until someone fills one in
+# from the admin, which is more honest than a link that goes nowhere. GitHub is
+# the exception, because the organisation already exists.
+SOCIAL_LINKS = [
+    ("Discord", "chat", ""),
+    ("WhatsApp", "chat", ""),
+    ("GitHub", "social", "https://github.com/devcom-goseong"),
+    ("LinkedIn", "social", ""),
+    ("Instagram", "social", ""),
+    ("Facebook", "social", ""),
+    ("X", "social", ""),
+]
 
 FACTS = [
     ("Founded", "August 2026"),
@@ -209,6 +224,18 @@ class Command(BaseCommand):
         SiteSettings.get()
         counts["site settings"] = 1
 
+        # Only the group and the ordering are managed here. The address is
+        # written once if the row is new and left alone afterwards, so that
+        # re-running the seed never wipes a link somebody has since added.
+        for index, (name, group, url) in enumerate(SOCIAL_LINKS):
+            link, created = SocialLink.objects.get_or_create(
+                name=name, defaults={"url": url, "group": group, "order": index * 10})
+            if not created:
+                link.group = group
+                link.order = index * 10
+                link.save(update_fields=["group", "order"])
+        counts["social links"] = len(SOCIAL_LINKS)
+
         for index, (label, value) in enumerate(FACTS):
             Fact.objects.update_or_create(label=label, defaults={"value": value, "order": index})
         counts["facts"] = len(FACTS)
@@ -253,7 +280,7 @@ class Command(BaseCommand):
         counts["resource groups"] = len(RESOURCE_GROUPS)
         counts["resources"] = links
 
-        from .seed_activities import ACTIVITIES
+        from content.seed_data.activities import ACTIVITIES
 
         for index, spec in enumerate(ACTIVITIES):
             activity, _ = Activity.objects.update_or_create(
@@ -282,7 +309,7 @@ class Command(BaseCommand):
                 )
         counts["activities"] = len(ACTIVITIES)
 
-        from .seed_pages import PAGES, load_pages
+        from content.seed_data.pages import PAGES, load_pages
 
         load_pages()
         counts["pages"] = len(PAGES)

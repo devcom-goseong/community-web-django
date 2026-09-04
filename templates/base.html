@@ -27,7 +27,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/favicon/favicon-32.png' %}">
 <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/favicon/favicon-16.png' %}">
 <link rel="apple-touch-icon" href="{% static 'assets/favicon/apple-touch-icon.png' %}">
-<meta name="theme-color" content="#0d0d0d">
+<meta name="theme-color" content="#062350">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,7 +47,7 @@
 <header class="site-header">
   <div class="wrap wrap--wide site-header__inner">
     <a class="brand" href="{% url 'content:home' %}" aria-label="{{ site.community_name }} — home">
-      <img class="brand__mark" src="{% static 'assets/images/logo-mark.png' %}" width="320" height="38" alt="" aria-hidden="true">
+      <img class="brand__mark" src="{% static 'assets/images/logo-mark.png' %}" width="320" height="316" alt="" aria-hidden="true">
       <span class="brand__text"><span>KDU Developer</span><span>Community</span></span>
     </a>
 
@@ -76,20 +76,36 @@
     <div class="footer__top">
       <div class="footer__brand">
         <a class="brand" href="{% url 'content:home' %}">
-          <img class="brand__mark" src="{% static 'assets/images/logo-mark-inverse.png' %}" width="320" height="38" alt="" aria-hidden="true">
+          <img class="brand__mark" src="{% static 'assets/images/logo-mark.png' %}" width="320" height="316" alt="" aria-hidden="true">
           <span class="brand__text"><span>KDU Developer</span><span>Community</span></span>
         </a>
         <p class="footer__blurb">{{ site.footer_blurb }}</p>
 
-        <p class="footer__heading mt-7">Platforms</p>
-        <ul class="footer__list">
-          {% for platform in site.platforms %}
-            <li>
-              {% if platform.url %}<a href="{{ platform.url }}">{{ platform.name }}</a>
-              {% else %}<span>{{ platform.name }}</span> <span class="footer__soon">Soon</span>{% endif %}
-            </li>
-          {% endfor %}
-        </ul>
+        {% if chat_links %}
+          <p class="footer__heading mt-7">Where we talk</p>
+          <ul class="footer__list">
+            {% for link in chat_links %}
+              <li>
+                {% if link.url %}<a href="{{ link.url }}" rel="noopener">{{ link.name }}</a>
+                {% else %}<span>{{ link.name }}</span> <span class="footer__soon">Soon</span>{% endif %}
+                {% if link.handle %}<span class="footer__handle">{{ link.handle }}</span>{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if social_links %}
+          <p class="footer__heading mt-6">Follow us</p>
+          <ul class="footer__list">
+            {% for link in social_links %}
+              <li>
+                {% if link.url %}<a href="{{ link.url }}" rel="me noopener">{{ link.name }}</a>
+                {% else %}<span>{{ link.name }}</span> <span class="footer__soon">Soon</span>{% endif %}
+                {% if link.handle %}<span class="footer__handle">{{ link.handle }}</span>{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
       </div>
 
       <nav aria-labelledby="footer-explore">
