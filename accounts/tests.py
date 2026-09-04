@@ -13,6 +13,18 @@ from .models import Member
 
 UserModel = get_user_model()
 
+# CI runs with DEBUG off and SECURE_SSL_REDIRECT on, which is the point: it
+# checks the production posture of the settings module. The consequence is that
+# the test client's http:// requests are answered with a 301 to https:// and
+# never reach a view, so it has to be off for tests that make requests. The
+# cache and the mail backend are pinned here rather than left to the
+# environment, so the suite behaves the same whoever runs it.
+TEST_SETTINGS = {
+    "SECURE_SSL_REDIRECT": False,
+    "CACHES": {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
+    "EMAIL_BACKEND": "django.core.mail.backends.locmem.EmailBackend",
+}
+
 GOOD = {
     "display_name": "Sam Park",
     "email": "sam@example.org",
@@ -24,8 +36,7 @@ GOOD = {
 }
 
 
-@override_settings(DJANGO_LOCMEM_CACHE=True,
-                   EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+@override_settings(**TEST_SETTINGS)
 class SignUpTests(TestCase):
     def setUp(self):
         cache.clear()
@@ -95,8 +106,7 @@ class SignUpTests(TestCase):
         self.assertFalse(Member.objects.get(user__email="sam@example.org").is_verified)
 
 
-@override_settings(DJANGO_LOCMEM_CACHE=True,
-                   EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+@override_settings(**TEST_SETTINGS)
 class VerificationTests(TestCase):
     def setUp(self):
         cache.clear()
@@ -144,8 +154,7 @@ class VerificationTests(TestCase):
         self.assertFalse(self.member.is_verified)
 
 
-@override_settings(DJANGO_LOCMEM_CACHE=True,
-                   EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+@override_settings(**TEST_SETTINGS)
 class SignInTests(TestCase):
     def setUp(self):
         cache.clear()
@@ -175,8 +184,7 @@ class SignInTests(TestCase):
         self.assertIn(reverse("accounts:login"), response.url)
 
 
-@override_settings(DJANGO_LOCMEM_CACHE=True,
-                   EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+@override_settings(**TEST_SETTINGS)
 class DashboardTests(TestCase):
     def setUp(self):
         cache.clear()
