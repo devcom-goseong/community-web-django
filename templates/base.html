@@ -61,6 +61,11 @@
         <li><a class="nav__link" href="{% url 'content:about' %}"{% if nav == 'about' %} aria-current="page"{% endif %}>About</a></li>
         <li><a class="nav__link" href="{% url 'content:activities' %}"{% if nav == 'activities' %} aria-current="page"{% endif %}>Activities</a></li>
         <li><a class="nav__link" href="{% url 'content:page' 'start' %}"{% if nav == 'start' %} aria-current="page"{% endif %}>Start here</a></li>
+        {% if user.is_authenticated %}
+          <li><a class="nav__link" href="{% url 'accounts:dashboard' %}"{% if nav == 'account' %} aria-current="page"{% endif %}>Your account</a></li>
+        {% else %}
+          <li><a class="nav__link" href="{% url 'accounts:login' %}"{% if nav == 'account' %} aria-current="page"{% endif %}>Sign in</a></li>
+        {% endif %}
         <li><a class="nav__link nav__link--cta" href="{% url 'content:join' %}"{% if nav == 'join' %} aria-current="page"{% endif %}>Join</a></li>
       </ul>
     </nav>
@@ -122,6 +127,12 @@
       <nav aria-labelledby="footer-start">
         <p class="footer__heading" id="footer-start">Getting started</p>
         <ul class="footer__list">
+          {% if user.is_authenticated %}
+            <li><a href="{% url 'accounts:dashboard' %}">Your account</a></li>
+          {% else %}
+            <li><a href="{% url 'accounts:signup' %}">Create an account</a></li>
+            <li><a href="{% url 'accounts:login' %}">Sign in</a></li>
+          {% endif %}
           <li><a href="{% url 'content:page' 'start' %}">Your first month</a></li>
           <li><a href="{% url 'content:interests' %}">What you can get into</a></li>
           <li><a href="{% url 'content:resources' %}">Where to start</a></li>

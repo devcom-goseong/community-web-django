@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% if ok %}
+    {% include "partials/page_head.html" with eyebrow="Account" heading="Email address confirmed" lead="Thank you. We know this address reaches you." %}
+    <section class="section section--flush-top">
+      <div class="wrap wrap--narrow">
+        <p>
+          Your account is confirmed. The leadership team reviews new members, so your
+          membership will still show as awaiting review until someone has looked at it.
+        </p>
+        <p class="mt-5"><a class="link-arrow" href="{% url 'accounts:dashboard' %}">Go to your account</a></p>
+      </div>
+    </section>
+  {% else %}
+    {% include "partials/page_head.html" with eyebrow="Account" heading="That link did not work" lead="It has either expired or it is not a link we issued." %}
+    <section class="section section--flush-top">
+      <div class="wrap wrap--narrow">
+        <p>
+          Confirmation links last three days. If yours has run out, sign in and ask for
+          another one from your account page.
+        </p>
+        <p class="mt-5"><a class="link-arrow" href="{% url 'accounts:login' %}">Sign in</a></p>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}

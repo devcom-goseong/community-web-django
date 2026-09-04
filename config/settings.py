@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "content",
     "applications",
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -117,6 +118,21 @@ CACHES = {
 }
 if DEBUG or env_bool("DJANGO_LOCMEM_CACHE"):
     CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+
+# Sign in with an email address rather than a username. The stock backend is
+# kept behind it so `createsuperuser` accounts and the admin still work.
+AUTHENTICATION_BACKENDS = [
+    "accounts.backends.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+LOGIN_URL = "/account/sign-in/"
+LOGIN_REDIRECT_URL = "/account/me/"
+LOGOUT_REDIRECT_URL = "/"
+
+# Three days, matching the confirmation link, so the two do not expire at
+# noticeably different times and confuse someone working through their inbox.
+PASSWORD_RESET_TIMEOUT = 3 * 24 * 60 * 60
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

@@ -1,0 +1,48 @@
+{% comment %}
+One form field in the site's own markup.
+
+Django's field rendering does not know about .field / .input / .choice, and a
+form that looked like default Django next to pages that look like this would
+read as a different site. Include this per field:
+
+    {% include "accounts/_field.html" with field=form.display_name %}
+{% endcomment %}
+<div class="field{% if field.field.widget.input_type == 'checkbox' and not field.field.widget.allow_multiple_selected %} field--consent{% endif %}"
+     {% if field.errors %}data-invalid="true"{% endif %}>
+
+  {% if field.field.widget.allow_multiple_selected %}
+    <fieldset class="fieldset">
+      <legend class="fieldset__legend">
+        {{ field.label }}{% if not field.field.required %} <span class="opt">optional</span>{% endif %}
+      </legend>
+      <div class="choices choices--row">
+        {% for choice in field %}
+          <label class="choice" for="{{ choice.id_for_label }}">
+            {{ choice.tag }}<span>{{ choice.choice_label }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+  {% elif field.field.widget.input_type == "checkbox" %}
+    <label class="consent" for="{{ field.id_for_label }}">
+      {{ field }}
+      <span>{{ field.label }}{% if field.field.required %} <span class="req">*</span>{% endif %}</span>
+    </label>
+
+  {% else %}
+    <label class="field__label" for="{{ field.id_for_label }}">
+      {{ field.label }}{% if field.field.required %} <span class="req">*</span>
+      {% else %} <span class="opt">optional</span>{% endif %}
+    </label>
+    {{ field }}
+  {% endif %}
+
+  {% comment %}
+    A div, not a p. Django's password rules arrive as a list, and a list inside
+    a paragraph is invalid HTML, so the browser hoists it out of the paragraph
+    and it loses the hint styling entirely.
+  {% endcomment %}
+  {% if field.help_text %}<div class="field__hint">{{ field.help_text }}</div>{% endif %}
+  {% for error in field.errors %}<p class="field__error">{{ error }}</p>{% endfor %}
+</div>

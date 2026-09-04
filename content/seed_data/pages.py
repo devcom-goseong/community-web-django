@@ -10,7 +10,7 @@ PAGES = [
         "eyebrow": "Rules · Read before applying",
         "lead": "The rules every member of the KDU Developer Community agrees to: behaviour, "
                 "taking part, crediting work, use of the platforms, and how breaches are handled.",
-        "show_version": True, "version": "Version 1", "reviewed_on": date(2026, 8, 29),
+        "show_version": True, "version": "Version 2", "reviewed_on": date(2026, 9, 4),
         "notice_title": "Working version",
         "notice_body": "This is the current version. The leadership team will confirm the final "
                        "wording before the community opens to a wider group. If something reads "
@@ -113,52 +113,72 @@ PAGES = [
     {
         "slug": "privacy", "title": "Privacy notice", "order": 2,
         "eyebrow": "Privacy · Plainly put",
-        "lead": "What the KDU Developer Community collects when you use the form, what happens to "
-                "it, who can see it, and how to have it deleted.",
+        "lead": "What the KDU Developer Community collects when you use the form or create an "
+                "account, what happens to it, who can see it, and how to have it deleted.",
         "show_version": True, "version": "Version 1", "reviewed_on": date(2026, 8, 29),
-        "intro": "This covers this website and the form on it. It is written to be read rather "
-                 "than to protect us. If anything here is unclear, ask, and we will fix the wording.",
+        "intro": "This covers this website, the form on it, and member accounts. It is written "
+                 "to be read rather than to protect us. If anything here is unclear, ask, "
+                 "and we will fix the wording.",
         "sections": [
-            ("collect", "1. What we collect", "Only what you type into the form:",
+            ("collect", "1. What we collect", "From the form, only what you type into it:",
              "Whether you are applying to join or asking a question\n"
              "Your name and your email address\n"
              "Whether you are a KDU student, and your student ID if you choose to give it\n"
              "The areas of interest you tick\n"
              "Your message\n"
              "That you agreed to be contacted, and that you accepted the rules, terms and this notice"),
-            ("use", "2. What happens to it",
+            ("account", "2. If you create an account",
+             "An account is optional. You can send the form, apply, and get a reply without "
+             "one.\n\n"
+             "If you do create one, we additionally hold your password and whether you have "
+             "confirmed your email address. The password itself is not stored: what we keep "
+             "is a salted hash of it, which cannot be turned back into the password, so "
+             "nobody here can read it or tell you what it is. Everything else on your "
+             "account — your introduction, your interests, your links — is there because you "
+             "typed it, and you can change or empty it yourself at any time.",
+             ""),
+            ("use", "3. What happens to it",
              "Your submission is sent to the community's own server, where it is stored so the "
              "leadership team can review it, and turned into two emails: a confirmation to you, so "
              "you know it arrived, and a notification to the community inbox.\n\n"
              "The server is run by the community and is not shared with anyone else.",
              ""),
-            ("who", "3. Who can see it",
+            ("who", "4. Who can see it",
              "The members of the leadership team who have access to the community inbox and the "
              "review screen. Nobody outside the community.",
              ""),
-            ("automatic", "4. What happens automatically", "",
+            ("automatic", "5. What happens automatically", "",
              "Your IP address is used briefly, and only in memory, to stop one source flooding the "
              "form. It is not stored and it is not put in either email.\n"
              "Our hosts keep standard server logs, as every web host does.\n"
              "The emails are sent through Gmail, so Google handles them as it handles any email.\n"
              "The typeface loads from Google Fonts, so Google receives your IP address and browser "
              "details when a page opens."),
-            ("dont", "5. What we do not do", "",
+            ("cookies", "6. Cookies", "",
+             "Reading this site sets no cookies at all.\n"
+             "Signing in sets two: one that keeps you signed in, and one that stops a form "
+             "being submitted from another site. Both are strictly necessary for an account "
+             "to work, neither follows you anywhere, and signing out clears the first.\n"
+             "There are no analytics, advertising or third-party cookies, which is why there "
+             "is no consent banner to click."),
+            ("dont", "7. What we do not do", "",
              "No analytics, and no tracking of any kind.\n"
-             "This site sets no cookies for visitors and stores nothing in your browser.\n"
              "No advertising, and no marketing lists.\n"
+             "No email from us except the ones you cause: a reply, a confirmation, a link to "
+             "confirm your address, or a link to reset your password.\n"
              "Your details are never sold, shared, or passed to anyone outside the leadership team."),
-            ("keep", "6. How long we keep it",
-             "Your application stays on file for as long as you are a member. If we cannot accept "
-             "your application we delete it once we have told you. If you ask us to delete it at "
-             "any point, we delete it.",
+            ("keep", "8. How long we keep it",
+             "Your application stays on file for as long as you are a member. If we cannot "
+             "accept your application we delete it once we have told you. An account stays "
+             "until you ask us to close it, and closing it deletes the account and everything "
+             "on it. If you ask us to delete anything at any point, we delete it.",
              ""),
-            ("rights", "7. Asking for your data",
+            ("rights", "9. Asking for your data",
              "You can ask for a copy of what we hold about you, ask us to correct it, or ask us to "
              "delete it. Reply to the confirmation email you received, or use the form and say what "
              "you want. We will do it and tell you when it is done.",
              ""),
-            ("changes", "8. Changes",
+            ("changes", "10. Changes",
              "If this notice changes we update the date at the top of this page, and announce "
              "anything material on the community platform.",
              ""),

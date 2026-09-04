@@ -1,0 +1,80 @@
+{% extends "base.html" %}{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/form.css' %}">{% endblock %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Account" heading="Create an account" lead="An account lets you keep your own details current and see where your application got to. You do not need one to send a message — the join form works without signing in." %}
+
+  <section class="section" aria-labelledby="signup-title">
+    <div class="wrap split">
+
+      <div class="split__aside">
+        <div class="plate"><h2 class="plate__title" id="signup-title">Before you start</h2></div>
+
+        <ul class="ticks mt-6">
+          <li>Anyone can have an account: students at Kyungdong University and developers anywhere else.</li>
+          <li>We send one email to confirm the address. Nothing else goes out until you ask for it.</li>
+          <li>An account on its own is not membership. The leadership team reviews new members.</li>
+        </ul>
+
+        <div class="note mt-7">
+          <p class="note__title">What you are agreeing to</p>
+          <ul class="ticks mt-4">
+            <li><a href="{% url 'content:page' 'rules' %}">Community rules</a> — what we expect from each other</li>
+            <li><a href="{% url 'content:page' 'terms' %}">Terms</a> — membership and your work</li>
+            <li><a href="{% url 'content:page' 'privacy' %}">Privacy notice</a> — what happens to your details</li>
+          </ul>
+        </div>
+
+        <p class="small muted mt-7">
+          Already have an account? <a href="{% url 'accounts:login' %}">Sign in</a>.
+        </p>
+      </div>
+
+      <div class="split__body">
+        <form class="form" method="post" action="{% url 'accounts:signup' %}" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="form__status" role="alert" data-state="error">
+              {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+          {% endif %}
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend">Who you are</legend>
+            <div class="fields">
+              {% include "accounts/_field.html" with field=form.display_name %}
+              {% include "accounts/_field.html" with field=form.email %}
+              {% include "accounts/_field.html" with field=form.student %}
+              {% include "accounts/_field.html" with field=form.student_id %}
+            </div>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend">A password</legend>
+            <div class="fields">
+              {% include "accounts/_field.html" with field=form.password1 %}
+              {% include "accounts/_field.html" with field=form.password2 %}
+            </div>
+          </fieldset>
+
+          {% include "accounts/_field.html" with field=form.interests %}
+
+          <fieldset class="fieldset"{% if form.accepted_documents.errors %} data-invalid="true"{% endif %}>
+            <legend class="fieldset__legend">Before you finish <span class="req">*</span></legend>
+            <div class="fields">
+              {% include "accounts/_field.html" with field=form.accepted_documents %}
+            </div>
+          </fieldset>
+
+          <div class="form__actions">
+            <button class="btn" type="submit">Create the account</button>
+            <p class="small muted">Fields marked <span class="req">*</span> are required.</p>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </section>
+{% endblock %}

@@ -17,6 +17,14 @@ from django.utils.html import escape
 
 log = logging.getLogger(__name__)
 
+# The identity, so an email looks like the site it came from. Email clients
+# strip stylesheets, so these have to be inline, but they do not have to be
+# written out nineteen times.
+NAVY = "#062350"      # the ink of the logo
+INK = "#0a2c60"       # body text
+MUTED = "#4e617e"     # labels and secondary text
+RULE = "#d5d6d4"      # hairlines
+
 STUDENT_LABELS = {"yes": "Yes", "no": "No", "soon": "Starting soon", "": "Not answered"}
 
 
@@ -44,21 +52,21 @@ def _notification(application, admin_url):
         + "Reply directly to this email to answer them."
     )
     row_html = "\n".join(
-        f'<tr><td style="padding:8px 16px 8px 0;border-bottom:1px solid #d4d4d4;'
-        f'color:#6a6a6a;white-space:nowrap;vertical-align:top">{escape(label)}</td>'
-        f'<td style="padding:8px 0;border-bottom:1px solid #d4d4d4;color:#141414">'
+        f'<tr><td style="padding:8px 16px 8px 0;border-bottom:1px solid {RULE};'
+        f'color:{MUTED};white-space:nowrap;vertical-align:top">{escape(label)}</td>'
+        f'<td style="padding:8px 0;border-bottom:1px solid {RULE};color:{INK}">'
         f"{escape(str(value))}</td></tr>"
         for label, value in rows
     )
-    html = f"""<div style="font-family:Helvetica,Arial,sans-serif;color:#141414;line-height:1.6;max-width:640px">
-  <p style="font-family:monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#6a6a6a;margin:0 0 8px">
+    html = f"""<div style="font-family:Georgia,'Times New Roman',serif;color:{INK};line-height:1.6;max-width:640px">
+  <p style="font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{MUTED};margin:0 0 8px">
     {"New question" if application.is_question else "New membership application"}
   </p>
-  <h1 style="font-size:22px;margin:0 0 20px;color:#0d0d0d">{escape(application.name)}</h1>
+  <h1 style="font-size:22px;margin:0 0 20px;color:{NAVY}">{escape(application.name)}</h1>
   <table style="border-collapse:collapse;width:100%;font-size:14px">{row_html}</table>
-  <p style="font-family:monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#6a6a6a;margin:24px 0 8px">Message</p>
-  <div style="white-space:pre-wrap;border-left:2px solid #0d0d0d;padding:4px 0 4px 16px;font-size:15px">{escape(application.message or "(no message)")}</div>
-  <p style="font-size:13px;color:#6a6a6a;margin-top:28px;border-top:1px solid #d4d4d4;padding-top:12px">
+  <p style="font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{MUTED};margin:24px 0 8px">Message</p>
+  <div style="white-space:pre-wrap;border-left:2px solid {NAVY};padding:4px 0 4px 16px;font-size:15px">{escape(application.message or "(no message)")}</div>
+  <p style="font-size:13px;color:{MUTED};margin-top:28px;border-top:1px solid {RULE};padding-top:12px">
     <a href="{admin_url}">Review it in the admin</a> — or reply to this email to answer them directly.
   </p>
 </div>"""
@@ -105,17 +113,17 @@ Kyungdong University, South Korea
 We keep your details so the leadership team can review your application, and we
 do not share them outside that team. Ask us to delete them and we will."""
 
-    html = f"""<div style="font-family:Helvetica,Arial,sans-serif;color:#141414;line-height:1.65;max-width:600px">
-  <p style="font-family:monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#6a6a6a;margin:0 0 8px">{escape(settings.TEAM_NAME)}</p>
-  <h1 style="font-size:24px;margin:0 0 20px;color:#0d0d0d">Thanks, {escape(first_name)} — we have it.</h1>
+    html = f"""<div style="font-family:Georgia,'Times New Roman',serif;color:{INK};line-height:1.65;max-width:600px">
+  <p style="font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{MUTED};margin:0 0 8px">{escape(settings.TEAM_NAME)}</p>
+  <h1 style="font-size:24px;margin:0 0 20px;color:{NAVY}">Thanks, {escape(first_name)} — we have it.</h1>
   <p style="margin:0 0 16px">Someone on the leadership team will read what you wrote and get back to you.</p>
-  <p style="font-family:monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#6a6a6a;margin:28px 0 8px">What you sent us</p>
-  <div style="white-space:pre-wrap;border-left:2px solid #0d0d0d;padding:4px 0 4px 16px;font-size:14px">{escape(summary)}</div>
-  {f'<div style="white-space:pre-wrap;border-left:2px solid #d4d4d4;padding:4px 0 4px 16px;margin-top:16px;font-size:14px;color:#6a6a6a">{escape(application.message)}</div>' if application.message else ""}
+  <p style="font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{MUTED};margin:28px 0 8px">What you sent us</p>
+  <div style="white-space:pre-wrap;border-left:2px solid {NAVY};padding:4px 0 4px 16px;font-size:14px">{escape(summary)}</div>
+  {f'<div style="white-space:pre-wrap;border-left:2px solid {RULE};padding:4px 0 4px 16px;margin-top:16px;font-size:14px;color:{MUTED}">{escape(application.message)}</div>' if application.message else ""}
   <p style="margin:24px 0 0">You agreed to the <a href="{site}/rules.html">community rules</a>,
     <a href="{site}/terms.html">terms</a> and <a href="{site}/privacy.html">privacy notice</a>.
     If anything above is wrong, just reply to this email.</p>
-  <p style="margin:24px 0 0;color:#6a6a6a">— The {escape(settings.TEAM_NAME)} leadership team<br>Kyungdong University, South Korea</p>
+  <p style="margin:24px 0 0;color:{MUTED}">— The {escape(settings.TEAM_NAME)} leadership team<br>Kyungdong University, South Korea</p>
 </div>"""
     return text, html
 

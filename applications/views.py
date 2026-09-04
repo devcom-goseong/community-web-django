@@ -56,16 +56,22 @@ def _client_ip(request):
     return request.META.get("REMOTE_ADDR", "")
 
 
-def _rate_limited(request):
+def _rate_limited(request, scope="form"):
     """Best-effort per-IP limit.
 
     The IP is hashed and only ever lives in the cache, never in the database,
     because the published privacy notice says it is not stored.
+
+    `scope` keeps separate counters for separate things. Without it, somebody
+    creating an account would spend the same budget as somebody sending the
+    join form, and on a shared university connection the two would starve each
+    other for reasons neither person could see.
     """
     ip = _client_ip(request)
     if not ip:
         return False
-    key = "ratelimit:" + hashlib.sha256(ip.encode("utf-8")).hexdigest()[:32]
+    digest = hashlib.sha256(ip.encode("utf-8")).hexdigest()[:32]
+    key = f"ratelimit:{scope}:{digest}"
     try:
         hits = cache.get_or_set(key, 0, settings.RATE_LIMIT_WINDOW_SECONDS)
         hits = cache.incr(key)

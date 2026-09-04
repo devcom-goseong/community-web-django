@@ -1,0 +1,120 @@
+{% extends "base.html" %}{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/form.css' %}">{% endblock %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Account" heading="Your account" lead="Your details, and where things stand." %}
+
+  <section class="section section--flush-top" aria-labelledby="status-title">
+    <div class="wrap split">
+
+      <div class="split__aside">
+        <div class="plate"><h2 class="plate__title" id="status-title">Where things stand</h2></div>
+
+        <dl class="deflist mt-6">
+          <div>
+            <dt>Email</dt>
+            <dd>
+              {{ member.email }}
+              {% if not member.is_verified %}<span class="tag">Not confirmed</span>{% endif %}
+            </dd>
+          </div>
+          <div>
+            <dt>Membership</dt>
+            <dd>{{ member.get_status_display }}</dd>
+          </div>
+          <div>
+            <dt>Account created</dt>
+            <dd>{{ member.created_at|date:"j F Y" }}</dd>
+          </div>
+        </dl>
+
+        {% if not member.is_verified %}
+          <div class="note mt-7">
+            <p class="note__title">Confirm your email address</p>
+            <p class="small muted mt-4">
+              We sent a link to {{ member.email }}. Until it is opened we cannot be sure the
+              address reaches you, so nothing else is sent to it.
+            </p>
+            <form method="post" action="{% url 'accounts:resend_verification' %}" class="mt-5">
+              {% csrf_token %}
+              <button class="btn btn--ghost btn--plain" type="submit">Send the link again</button>
+            </form>
+          </div>
+        {% endif %}
+
+        <p class="small muted mt-7">
+          <a href="{% url 'accounts:password_change' %}">Change your password</a>
+        </p>
+        <form method="post" action="{% url 'accounts:logout' %}" class="mt-4">
+          {% csrf_token %}
+          <button class="btn btn--ghost btn--plain" type="submit">Sign out</button>
+        </form>
+      </div>
+
+      <div class="split__body">
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="form__status" role="status"
+                 data-state="{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+              <span class="form__status-mark" aria-hidden="true">{% if message.tags == 'error' %}!{% else %}&check;{% endif %}</span>
+              <div><p class="form__status-text">{{ message }}</p></div>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <div class="plate mt-8"><h2 class="plate__title">Your details</h2></div>
+        <p class="plate__note">
+          These are yours to change. Your membership status is not — that is the leadership
+          team's to set, after a review.
+        </p>
+
+        <form class="form" method="post" novalidate>
+          {% csrf_token %}
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend">About you</legend>
+            <div class="fields">
+              {% include "accounts/_field.html" with field=form.display_name %}
+              {% include "accounts/_field.html" with field=form.student %}
+              {% include "accounts/_field.html" with field=form.student_id %}
+              {% include "accounts/_field.html" with field=form.bio %}
+            </div>
+          </fieldset>
+
+          {% include "accounts/_field.html" with field=form.interests %}
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend">Where else to find you</legend>
+            <div class="fields">
+              {% include "accounts/_field.html" with field=form.github_url %}
+              {% include "accounts/_field.html" with field=form.linkedin_url %}
+            </div>
+          </fieldset>
+
+          <div class="form__actions">
+            <button class="btn" type="submit">Save</button>
+          </div>
+        </form>
+
+        {% if applications %}
+          <div class="plate mt-10"><h2 class="plate__title">What you have sent us</h2></div>
+          <p class="plate__note">
+            Anything sent through the join form from this address.
+          </p>
+          <dl class="deflist mt-6">
+            {% for application in applications %}
+              <div>
+                <dt>{{ application.created_at|date:"j F Y" }}</dt>
+                <dd>
+                  {{ application.get_intent_display }} &middot; {{ application.get_status_display }}
+                </dd>
+              </div>
+            {% endfor %}
+          </dl>
+        {% endif %}
+
+      </div>
+    </div>
+  </section>
+{% endblock %}

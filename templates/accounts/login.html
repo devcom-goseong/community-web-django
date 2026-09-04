@@ -1,0 +1,58 @@
+{% extends "base.html" %}{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/form.css' %}">{% endblock %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Account" heading="Sign in" lead="For members who already have an account." %}
+
+  <section class="section" aria-labelledby="signin-title">
+    <div class="wrap split">
+
+      <div class="split__aside">
+        <div class="plate"><h2 class="plate__title" id="signin-title">No account yet?</h2></div>
+        <p class="mt-6">
+          You do not need one to reach us. The
+          <a href="{% url 'content:join' %}">join form</a> works without signing in, and a
+          person on the leadership team reads everything that comes through it.
+        </p>
+        <p class="mt-5">
+          If you would rather have an account,
+          <a href="{% url 'accounts:signup' %}">create one</a>.
+        </p>
+      </div>
+
+      <div class="split__body">
+        <form class="form" method="post" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="form__status" role="alert" data-state="error">
+              <span class="form__status-mark" aria-hidden="true">!</span>
+              <div>
+                <p class="form__status-title">That did not work</p>
+                {% for error in form.non_field_errors %}
+                  <p class="form__status-text">{{ error }}</p>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="fields">
+            {% include "accounts/_field.html" with field=form.username %}
+            {% include "accounts/_field.html" with field=form.password %}
+          </div>
+
+          {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+          <div class="form__actions">
+            <button class="btn" type="submit">Sign in</button>
+            <p class="small muted">
+              <a href="{% url 'accounts:password_reset' %}">Forgotten your password?</a>
+            </p>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </section>
+{% endblock %}

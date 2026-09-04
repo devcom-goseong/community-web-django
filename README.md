@@ -25,7 +25,9 @@ there is one copy of the design and not two that drift apart.
 
 | Screen | What it controls |
 | --- | --- |
-| Site settings | Community name, university, footer text, and the Discord / WhatsApp / Instagram / GitHub links. Leave a link blank and the site shows a "Soon" tag; fill it in and it becomes a real link on every page at once |
+| Site settings | Community name, university, founding date and the footer text |
+| Social links | Every platform the community is on — Facebook, LinkedIn, GitHub, Instagram, X, Discord, WhatsApp, or anything added later. Each one is a row, so adding a platform is a form in the admin rather than a migration. Two groups: **Where we talk** and **Follow us**. Leave an address blank and the site shows a "Soon" badge instead of a dead link; fill it in and it becomes a real link on every page at once |
+| Members | Everyone with an account: their status, whether they have confirmed their email address, and what they accepted when they signed up |
 | Pages | The rules, terms, privacy notice, first month, accessibility and contributing pages — each with its own sections, which also build the contents list in the margin |
 | Activities | All seven, with their cadence tags, index copy and the sections on their own pages |
 | Home page cards and facts | The four cards and the at-a-glance strip |
@@ -42,6 +44,44 @@ hidden or reordered without a deploy.
 Run `python manage.py seed_content` once to load the site's current copy into
 the database. It is idempotent, but it overwrites the rows it manages — so run
 it at setup, and edit in the admin after that.
+
+---
+
+## Member accounts
+
+Anyone can use the join form without an account — that has not changed. An
+account is what comes afterwards: it is how somebody signs in, keeps their own
+details current, and sees where their application got to.
+
+| Address | What it is |
+| --- | --- |
+| `/account/sign-up/` | Create an account. Requires accepting the rules, terms and privacy notice, exactly as the join form does |
+| `/account/sign-in/` | Sign in with an email address |
+| `/account/me/` | A member's own page: their details, their confirmation state, and the applications sent from their address |
+| `/account/verify/<token>/` | Confirms an address from the link in the welcome email |
+| `/account/password/reset/` | Django's password reset, using this site's templates and the same SMTP account |
+
+Four decisions worth knowing about:
+
+- **Email is the identity.** `User.username` is set to the address so the stock
+  admin and password reset keep working, and `accounts/backends.py` does the
+  sign-in lookup case-insensitively, because nobody types their address the
+  same way twice.
+- **`auth.User` was kept, not replaced.** Swapping `AUTH_USER_MODEL` after the
+  first migration is a rewrite rather than a change, so everything the
+  community needs beyond the stock model lives on `Member`, a one-to-one row.
+- **Confirmation links are signed, not stored.** `django.core.signing` with a
+  three-day window: nothing to expire by hand, nothing to clean up, and a link
+  that has already been used still works, which is what someone who clicks
+  twice expects. The address is inside the signed payload and checked at the
+  point of use, so a link issued for an address that has since changed does not
+  silently confirm the new one.
+- **An account is not membership.** A new account is `Awaiting review` until
+  somebody on the leadership team approves it in the admin.
+
+Sign-up shares the join form's rate limiter but not its budget: the limiter
+takes a `scope`, so the two cannot starve each other on a shared university
+connection.
 
 ---
 
@@ -72,6 +112,16 @@ the form at this service. Suggested replacement:
 
 Section 6, on how long things are kept, is already accurate. Section 4 needs
 "our host, Netlify" widened to mention the community server as well.
+
+Accounts add one more: `privacy.html` says the site "sets no cookies for
+visitors and stores nothing in your browser". Signing in sets a session cookie
+and a CSRF cookie, so that sentence has to go at the same time.
+
+The copy **in this repository** has already been rewritten — it has a section
+on accounts, a section on cookies, and says plainly that the password is stored
+as a salted hash and cannot be read back. Run `python manage.py seed_content`
+and read `/privacy/` to see it. What still needs doing is the copy on the
+static Netlify site, which is a different file in a different repository.
 
 ---
 
@@ -226,6 +276,12 @@ browser will block the request.
 | `applications/views.py` | `POST /api/register`, answering in the shape the existing front end already expects |
 | `applications/emails.py` | Both messages, over a single SMTP connection |
 | `applications/admin.py` | The review screen: filters, search, bulk accept/decline |
+| `accounts/models.py` | `Member`, the community-facing half of an account |
+| `accounts/backends.py` | Signing in with an email address rather than a username |
+| `accounts/forms.py` | Sign-up, sign-in and profile forms, in the site's own markup |
+| `accounts/emails.py` | The welcome email and the signed confirmation link |
+| `content/models.py` | Every editable piece of the site, including `SocialLink` |
+| `content/seed_data/` | The starting copy. Data modules, not commands — they used to sit in `management/commands/`, where Django listed them as commands that crashed when run |
 
 Two decisions worth knowing about:
 
