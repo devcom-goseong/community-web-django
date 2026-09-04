@@ -55,6 +55,33 @@
   color: var(--color-ink);
 }
 
+/* Django renders the password rules as a <ul> inside the hint. Left alone it
+   arrives with browser bullets and browser indentation, which is the one place
+   on the site that would look like a default form rather than this one. */
+.field__hint ul {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.field__hint li {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.field__hint li::before {
+  content: "";
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  margin-top: 0.5em;
+  background: var(--color-accent-1);
+  -webkit-mask: var(--icon-chevron) center / contain no-repeat;
+          mask: var(--icon-chevron) center / contain no-repeat;
+}
+
 .field__hint {
   font-size: var(--fs-small);
   color: var(--color-text-muted);
@@ -104,7 +131,7 @@
   font-size: var(--fs-micro);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-ink);
+  color: var(--color-invalid);
 }
 
 .field[data-invalid="true"] .field__error { display: flex; }
@@ -272,8 +299,11 @@
 .form__status[data-state="success"],
 .form__status[data-state="error"] { display: flex; }
 
-.form__status[data-state="success"] { border-width: var(--border-heavy); border-color: var(--color-ink); }
-.form__status[data-state="error"] { border-width: var(--border-heavy); border-color: var(--color-ink); background: var(--color-bg-alt); }
+.form__status[data-state="success"] { border-width: var(--border-heavy); border-color: var(--color-valid); }
+.form__status[data-state="error"] { border-width: var(--border-heavy); border-color: var(--color-invalid); background: var(--color-invalid-field); }
+
+.form__status[data-state="success"] .form__status-mark { border-color: var(--color-valid); color: var(--color-valid); }
+.form__status[data-state="error"] .form__status-mark { border-color: var(--color-invalid); color: var(--color-invalid); }
 
 .form__status-mark {
   flex: none;

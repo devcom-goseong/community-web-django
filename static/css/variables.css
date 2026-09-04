@@ -1,71 +1,110 @@
 /* =============================================================================
    KDU Developer Community — Design tokens
    -----------------------------------------------------------------------------
-   Every colour, font and measurement the site uses is declared here.
-   Change a value in this file and it changes everywhere. Nothing in the HTML
-   or the other stylesheets hard-codes a colour.
+   Every colour, font and measurement the site uses is declared here. Change a
+   value in this file and it changes everywhere; nothing in the HTML or the
+   other stylesheets hard-codes a colour.
 
-   >>> COLOUR VALUES BELOW ARE PLACEHOLDERS — REPLACE THEM <<<
-   They are a sensible working greyscale (a near-black, a near-white and five
-   grey steps) so the site looks finished today. Swap the seven values in
-   "1. GREY RAMP" for the final palette and the whole site follows; the
-   semantic tokens in section 2 are derived from them and should not need
-   editing unless you want to change which grey does which job.
+   The palette is taken from the logo, sampled from the artwork rather than
+   picked by eye: a navy ink, a cream paper, and the three dots that sit above
+   the angle brackets, in blue, gold and green.
 
-   Rule for this project: greyscale only. No hue, no gradients, no accents.
+   How the colours are meant to behave
+   -----------------------------------
+   Navy and cream carry the page. The three dot colours are the accent family
+   and are used as graphic marks — dots, rules, small fills — not as body text.
+   Blue is the one accent that also carries meaning: it is the colour of
+   anything you can act on. Gold and green never appear as text on cream,
+   because neither reaches a readable contrast there. Gold on navy does, and
+   that is where it is allowed to speak.
+
+   Every foreground and background pair below has been checked against WCAG AA
+   (4.5:1 for text). Ratios are noted where they are close enough to matter.
    ========================================================================== */
 
 :root {
 
   /* ---------------------------------------------------------------------------
-     1. GREY RAMP — placeholder, replace
-     The only place raw colour values appear. Ordered light to dark.
+     1. THE PALETTE
+     The only place raw colour values appear.
      ------------------------------------------------------------------------ */
-  --grey-000: #ffffff;   /* placeholder — paper white, used for cards      */
-  --grey-050: #f2f2f2;   /* placeholder — page background                  */
-  --grey-100: #e6e6e6;   /* placeholder — alternate surface / fills        */
-  --grey-200: #d4d4d4;   /* placeholder — hairline rules and borders       */
-  --grey-400: #a3a3a3;   /* placeholder — strong borders, disabled text    */
-  --grey-500: #8a8a8a;   /* placeholder — faint text on light              */
-  --grey-600: #6a6a6a;   /* placeholder — muted body text                  */
-  --grey-800: #2b2b2b;   /* placeholder — emphasis grey (buttons, marks)   */
-  --grey-900: #141414;   /* placeholder — body text                        */
-  --grey-950: #0d0d0d;   /* placeholder — ink, the darkest value           */
+
+  /* The two that carry the page. */
+  --navy:  #062350;   /* the ink of the logo                                 */
+  --paper: #f7f3ea;   /* the cream inside the disc                           */
+
+  /* The three dots, in the order they sit above the brackets. */
+  --brand-blue:  #2c60c5;
+  --brand-gold:  #fbb405;
+  --brand-green: #448162;
+
+  /* Variants, for grounds where the pure colour cannot be read. Blue is
+     lightened for navy grounds and deepened for hover; green is darkened
+     enough to work as text. Gold has no text variant on purpose: on cream it
+     reaches 1.63:1, so it stays a graphic colour. */
+  --brand-blue-on-dark: #698cd0;   /* 4.59:1 on navy                          */
+  --brand-blue-deep:    #2351a9;   /* hover, and button grounds               */
+  --brand-green-text:   #3e7860;   /* 4.67:1 on paper                         */
+
+  /* The neutral ramp, mixed from paper towards navy rather than being true
+     grey, so borders and secondary text belong to the identity instead of
+     sitting beside it. Ordered light to dark. */
+  --ink-000: #ffffff;   /* card surfaces                                     */
+  --ink-050: #f7f3ea;   /* page background — the paper                       */
+  --ink-100: #e9e7e1;   /* alternate surface, quiet fills                    */
+  --ink-200: #d5d6d4;   /* hairline rules and borders                        */
+  --ink-300: #b8bdc2;   /* strong borders                                    */
+  --ink-400: #929ca9;   /* muted text on navy (5.54:1)                       */
+  --ink-500: #5d6e87;   /* faint text on paper (4.69:1)                      */
+  --ink-600: #4e617e;   /* muted body text on paper (5.69:1)                 */
+  --ink-800: #1e385f;   /* deep fills                                        */
+  --ink-900: #0a2c60;   /* body text (12.30:1 on paper)                      */
+  --ink-950: #062350;   /* the ink itself                                    */
 
   /* ---------------------------------------------------------------------------
-     2. SEMANTIC COLOUR — derived from the ramp above
+     2. SEMANTIC COLOUR — everything else refers to these, not to section 1
      ------------------------------------------------------------------------ */
-  --color-bg:            var(--grey-050);
-  --color-bg-alt:        var(--grey-100);
-  --color-surface:       var(--grey-000);
-  --color-surface-alt:   var(--grey-100);
+  --color-bg:            var(--ink-050);
+  --color-bg-alt:        var(--ink-100);
+  --color-surface:       var(--ink-000);
+  --color-surface-alt:   var(--ink-100);
 
-  --color-ink:           var(--grey-950);   /* near-black: bars, footer, logo  */
-  --color-text:          var(--grey-900);
-  --color-text-muted:    var(--grey-600);
-  --color-text-faint:    var(--grey-500);
+  --color-ink:           var(--ink-950);   /* bars, footer, the logo          */
+  --color-text:          var(--ink-900);
+  --color-text-muted:    var(--ink-600);
+  --color-text-faint:    var(--ink-500);
 
-  --color-border:        var(--grey-200);
-  --color-border-strong: var(--grey-400);
+  --color-border:        var(--ink-200);
+  --color-border-strong: var(--ink-300);
 
-  --color-primary:       var(--grey-800);   /* emphasis grey — buttons, marks  */
-  --color-primary-hover: var(--grey-950);
+  /* Interaction. Blue means this does something. */
+  --color-primary:       var(--brand-blue);
+  --color-primary-hover: var(--brand-blue-deep);
+  --color-on-primary:    var(--paper);
 
-  /* on dark grounds (the ink bands and the footer) */
-  --color-on-dark:        var(--grey-050);
-  --color-on-dark-muted:  var(--grey-400);
-  --color-on-dark-faint:  var(--grey-600);
-  --color-border-on-dark: #3a3a3a;          /* placeholder — replace           */
+  /* The accent family, for graphic use: dots, rules, small marks. */
+  --color-accent-1: var(--brand-blue);
+  --color-accent-2: var(--brand-gold);
+  --color-accent-3: var(--brand-green);
 
-  --color-focus:         var(--grey-950);
-  --color-focus-on-dark: var(--grey-000);
-  --color-selection-bg:  var(--grey-900);
-  --color-selection-fg:  var(--grey-050);
+  /* On dark grounds — the ink bands and the footer. */
+  --color-on-dark:         var(--paper);
+  --color-on-dark-muted:   var(--ink-400);
+  --color-on-dark-faint:   #838fa0;   /* 4.69:1 on navy                     */
+  --color-border-on-dark:  #364d6f;
+  --color-primary-on-dark: var(--brand-blue-on-dark);
+  --color-accent-on-dark:  var(--brand-gold);   /* 8.53:1 on navy             */
 
-  /* validation states — greyscale only, meaning is carried by text + icon,
-     never by colour alone */
-  --color-invalid:       var(--grey-950);
-  --color-invalid-field: var(--grey-100);
+  --color-focus:         var(--brand-blue);
+  --color-focus-on-dark: var(--brand-gold);
+  --color-selection-bg:  var(--brand-blue);
+  --color-selection-fg:  var(--paper);
+
+  /* Validation. Meaning is carried by wording and position as well as colour,
+     never by colour alone. */
+  --color-invalid:       #a3271f;
+  --color-invalid-field: #fbeceb;
+  --color-valid:         var(--brand-green-text);
 
   /* ---------------------------------------------------------------------------
      3. TYPEFACE
@@ -158,7 +197,7 @@
   --rule-strong: 1px solid var(--color-border-strong);
   --rule-ink: 1px solid var(--color-ink);
   --border-heavy: 2px;
-  --ground-h: clamp(3.5rem, 7vw, 6rem);   /* the black band under the hero */
+  --ground-h: clamp(3.5rem, 7vw, 6rem);   /* the navy band under the hero */
 
   /* Paper grain. Set --grain-opacity to 0 to remove the texture entirely. */
   --grain-opacity: 0.055;

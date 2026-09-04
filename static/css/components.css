@@ -5,8 +5,10 @@
    ========================================================================== */
 
 :root {
-  /* Line icons, drawn as CSS masks so they always inherit the surrounding
-     text colour. Greyscale by construction — there is no fill to get wrong. */
+  /* Line icons, drawn as CSS masks rather than images, so the shape comes from
+     here and the colour comes from whatever is painted behind the mask. The
+     stroke colour inside the data URI is therefore never seen and never has to
+     be kept in step with the palette. */
   --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='square'%3E%3Cpath d='M9 5l7 7-7 7'/%3E%3C/svg%3E");
   --icon-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='square'%3E%3Cpath d='M4 12h15M13 6l6 6-6 6'/%3E%3C/svg%3E");
 }
@@ -40,7 +42,7 @@
 }
 
 .brand__mark {
-  width: clamp(3.25rem, 7vw, 4.25rem);
+  width: clamp(2.3rem, 4.4vw, 2.9rem);
   flex: none;
 }
 
@@ -80,8 +82,8 @@
 }
 
 .nav__link:hover {
-  color: var(--color-ink);
-  border-bottom-color: var(--color-border-strong);
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 .nav__link[aria-current="page"] {
@@ -90,20 +92,16 @@
 }
 
 .nav__link--cta {
-  border: 1px solid var(--color-ink);
-  color: var(--color-ink);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
   padding: var(--space-2) var(--space-4);
 }
 
-.nav__link--cta:hover {
-  background: var(--color-ink);
-  color: var(--color-on-dark);
-  border-bottom-color: var(--color-ink);
-}
-
+.nav__link--cta:hover,
 .nav__link--cta[aria-current="page"] {
-  background: var(--color-ink);
-  color: var(--color-on-dark);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary);
 }
 
 /* --- Mobile menu ---------------------------------------------------------- */
@@ -228,8 +226,13 @@
   content: "";
   flex: 1 1 3rem;
   max-width: 9rem;
-  height: 1px;
-  background: var(--color-border-strong);
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    var(--color-accent-1) 0 33.34%,
+    var(--color-accent-2) 33.34% 66.67%,
+    var(--color-accent-3) 66.67% 100%
+  );
 }
 
 .hero__title {
@@ -324,6 +327,34 @@
    PLATE HEADINGS — the archive-plate device that opens every section
    ========================================================================== */
 
+/* The three dots above the angle brackets in the logo, reused as the section
+   marker. They are drawn rather than set in the markup so every existing
+   plate on the site picks them up, and they are decorative, so they stay out
+   of the accessibility tree. */
+.plate::before {
+  content: "";
+  display: block;
+  width: 3.05rem;
+  height: 0.55rem;
+  margin-bottom: var(--space-4);
+  background-image:
+    radial-gradient(circle at 50% 50%, var(--color-accent-1) 49%, transparent 51%),
+    radial-gradient(circle at 50% 50%, var(--color-accent-2) 49%, transparent 51%),
+    radial-gradient(circle at 50% 50%, var(--color-accent-3) 49%, transparent 51%);
+  background-size: 0.55rem 0.55rem;
+  background-position: left center, center center, right center;
+  background-repeat: no-repeat;
+}
+
+/* On the navy bands the green dot drops to 3.34:1 against the ground, so the
+   dots there are the two that hold up plus the paper cream. */
+.band .plate::before {
+  background-image:
+    radial-gradient(circle at 50% 50%, var(--color-primary-on-dark) 49%, transparent 51%),
+    radial-gradient(circle at 50% 50%, var(--color-accent-on-dark) 49%, transparent 51%),
+    radial-gradient(circle at 50% 50%, var(--color-on-dark) 49%, transparent 51%);
+}
+
 
 
 .plate__title {
@@ -368,11 +399,15 @@
   transition: transform var(--dur) var(--ease);
 }
 
-.btn:hover { background: transparent; color: var(--color-ink); }
+.btn:hover {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
 .btn:hover::after { transform: translateX(3px); }
 
 .btn--ghost { background: transparent; color: var(--color-ink); }
-.btn--ghost:hover { background: var(--color-ink); color: var(--color-on-dark); }
+.btn--ghost:hover { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
 
 .btn--on-dark {
   background: var(--color-on-dark);
@@ -380,7 +415,11 @@
   border-color: var(--color-on-dark);
 }
 
-.btn--on-dark:hover { background: transparent; color: var(--color-on-dark); }
+.btn--on-dark:hover {
+  background: transparent;
+  color: var(--color-accent-on-dark);
+  border-color: var(--color-accent-on-dark);
+}
 
 .btn--plain::after { display: none; }
 
@@ -414,11 +453,11 @@
   transition: transform var(--dur) var(--ease);
 }
 
-.link-arrow:hover { border-bottom-color: var(--color-ink); }
+.link-arrow:hover { color: var(--color-primary); border-bottom-color: var(--color-primary); }
 .link-arrow:hover::after { transform: translateX(3px); }
 
 .link-arrow--on-dark { color: var(--color-on-dark); border-bottom-color: var(--color-border-on-dark); }
-.link-arrow--on-dark:hover { color: var(--color-on-dark); border-bottom-color: var(--color-on-dark); }
+.link-arrow--on-dark:hover { color: var(--color-accent-on-dark); border-bottom-color: var(--color-accent-on-dark); }
 
 /* =============================================================================
    CARDS
@@ -434,7 +473,8 @@
   transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
 
-.card:hover { border-color: var(--color-border-strong); transform: translateY(-2px); }
+.card:hover { border-color: var(--color-primary); transform: translateY(-2px); }
+.card:hover .card__icon { stroke: var(--color-primary); }
 
 .card__icon {
   width: 30px;
@@ -442,6 +482,7 @@
   stroke: var(--color-ink);
   stroke-width: 1.25;
   fill: none;
+  transition: stroke var(--dur) var(--ease);
 }
 
 .card__title { font-size: var(--fs-h3); font-weight: var(--weight-display-bold); }
@@ -592,13 +633,13 @@
   width: 0.62em;
   height: 0.62em;
   margin-top: 0.5em;
-  background: var(--color-border-strong);
+  background: var(--color-accent-1);
   -webkit-mask: var(--icon-chevron) center / contain no-repeat;
           mask: var(--icon-chevron) center / contain no-repeat;
 }
 
 .ticks--on-dark li { color: var(--color-on-dark-muted); }
-.ticks--on-dark li::before { background: var(--color-on-dark-faint); }
+.ticks--on-dark li::before { background: var(--color-accent-on-dark); }
 
 /* =============================================================================
    STEPS — the joining process
@@ -761,19 +802,33 @@
   margin-top: var(--space-5);
 }
 
+/* This small caps label is used inside the footer and, on the activity pages,
+   in the aside on the cream ground. It takes the light-ground colour by
+   default and the dark one only where it actually sits on navy, so it cannot
+   be dropped onto a page and come out unreadable. */
 .footer__heading {
   font-family: var(--font);
   font-size: var(--fs-micro);
   font-weight: var(--weight-medium);
   letter-spacing: var(--tracking-caption);
   text-transform: uppercase;
-  color: var(--color-on-dark-faint);
+  color: var(--color-text-faint);
   margin-bottom: var(--space-4);
 }
+
+.site-footer .footer__heading,
+.band .footer__heading { color: var(--color-on-dark-faint); }
 
 .footer__list { display: grid; gap: var(--space-3); font-size: var(--fs-small); }
 
 .footer__list li { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+
+/* The account name beside a social link, when one is worth showing. */
+.footer__handle {
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-on-dark-faint);
+}
 
 .footer__soon {
   font-family: var(--font);
@@ -896,6 +951,14 @@
 
 .doc p { color: var(--color-text); }
 
+.doc a,
+.prose a,
+.entry__body a { color: var(--color-primary); }
+
+.doc a:hover,
+.prose a:hover,
+.entry__body a:hover { color: var(--color-primary-hover); }
+
 .doc__meta {
   display: flex;
   flex-wrap: wrap;
@@ -915,7 +978,7 @@
   padding-bottom: 2px;
 }
 
-.doc__toc a:hover { color: var(--color-ink); border-bottom-color: var(--color-border-strong); }
+.doc__toc a:hover { color: var(--color-primary); border-bottom-color: var(--color-primary); }
 
 /* Anchored headings should not hide under the sticky header. */
 .doc section { scroll-margin-top: calc(var(--header-h) + var(--space-5)); }
