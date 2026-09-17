@@ -1,5 +1,8 @@
 # nginx in front of gunicorn. TLS certificates are issued by Certbot into
-# the shared volume; see server/README.md for the one-time issue step.
+# the shared volume; see README.md for the one-time issue step.
+#
+# X-Real-IP is what the rate limiter trusts, so it must stay set from
+# $remote_addr. Do not replace it with a value taken from a request header.
 
 upstream app {
     server web:8000;

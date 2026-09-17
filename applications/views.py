@@ -12,19 +12,19 @@ A form-encoded POST (the no-JavaScript path) gets a small HTML page instead,
 matching the behaviour the site already documents.
 """
 
-import hashlib
 import json
 import logging
 import re
 import time
 
 from django.conf import settings
-from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.html import escape
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+
+from config.ratelimit import client_ip, rate_limited
 
 from .emails import send_application_emails
 from .models import Application
@@ -49,39 +49,10 @@ def _truthy(value):
     return value in (True, "yes", "on", "true", "1", 1)
 
 
-def _client_ip(request):
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR", "")
-
-
-def _rate_limited(request, scope="form"):
-    """Best-effort per-IP limit.
-
-    The IP is hashed and only ever lives in the cache, never in the database,
-    because the published privacy notice says it is not stored.
-
-    `scope` keeps separate counters for separate things. Without it, somebody
-    creating an account would spend the same budget as somebody sending the
-    join form, and on a shared university connection the two would starve each
-    other for reasons neither person could see.
-    """
-    ip = _client_ip(request)
-    if not ip:
-        return False
-    digest = hashlib.sha256(ip.encode("utf-8")).hexdigest()[:32]
-    key = f"ratelimit:{scope}:{digest}"
-    try:
-        hits = cache.get_or_set(key, 0, settings.RATE_LIMIT_WINDOW_SECONDS)
-        hits = cache.incr(key)
-    except ValueError:
-        cache.set(key, 1, settings.RATE_LIMIT_WINDOW_SECONDS)
-        hits = 1
-    except Exception:  # a cache backend problem must not block a real applicant
-        log.exception("rate limiter unavailable; allowing the request")
-        return False
-    return hits > settings.RATE_LIMIT_MAX
+# The limiter moved to config/ratelimit.py so every form shares one, fixed,
+# implementation. These names stay so nothing importing them breaks.
+_client_ip = client_ip
+_rate_limited = rate_limited
 
 
 def _parse(request):
