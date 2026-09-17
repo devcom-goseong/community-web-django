@@ -35,6 +35,15 @@
         <form class="form" method="post" action="{% url 'accounts:signup' %}" novalidate>
           {% csrf_token %}
 
+          {# Bot defences. The field below is hidden from people; a real
+             submission leaves it empty. The signed timestamp lets an instant,
+             automated post be recognised. Neither is stored. #}
+          <div style="position:absolute;left:-9999px;top:-9999px;height:0;width:0;overflow:hidden" aria-hidden="true">
+            <label for="company">Company</label>
+            <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+          </div>
+          <input type="hidden" name="ts" value="{{ signup_ts }}">
+
           {% if form.non_field_errors %}
             <div class="form__status" role="alert" data-state="error">
               {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}

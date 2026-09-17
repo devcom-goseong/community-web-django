@@ -31,6 +31,7 @@ from content.models import SocialLink
 from content.views import base_context
 
 from .access import access_state, can_see_members_area, is_staff, member_of
+from .antispam import is_bot_signup, new_timestamp
 from .emails import read_token, send_approval_email, send_welcome_email
 from .forms import (
     CloseAccountForm,
@@ -83,6 +84,19 @@ def signup(request):
     form = SignUpForm(request.POST or None)
 
     if request.method == "POST":
+        bot, reason = is_bot_signup(request)
+        if bot:
+            # Turn a bot away without a word it can learn from: it is told the
+            # same thing a real new member is told, but no account is made and
+            # no email is sent. A person never reaches this branch — the
+            # honeypot is hidden and nobody fills the form in three seconds.
+            log.info("signup: ignored a likely automated submission (%s)", reason)
+            messages.success(
+                request,
+                "Your account is ready. We have sent a link to "
+                f"{request.POST.get('email', 'your address')} — "
+                "open it to confirm the address.")
+            return redirect("accounts:login")
         # A sign-up form is a free way to send mail to any address somebody
         # types, so it is rate limited like the join form.
         if rate_limited(request, scope="signup"):
@@ -107,7 +121,7 @@ def signup(request):
     return render(request, "accounts/signup.html", _context(
         request, "Create an account",
         "Create an account for the KDU Developer Community.",
-        form=form,
+        form=form, signup_ts=new_timestamp(),
     ))
 
 
