@@ -74,14 +74,20 @@ class SeededSiteTests(TestCase):
         self.assertContains(response, "Soon")
         self.assertNotContains(response, 'href=""')
 
-    def test_filling_in_an_address_makes_it_a_link_everywhere(self):
-        link = SocialLink.objects.create(name="Discord", group=SocialLink.GROUP_CHAT, url="")
-        link.url = "https://discord.gg/example"
+    def test_filling_in_a_public_address_makes_it_a_link_everywhere(self):
+        link = SocialLink.objects.create(name="Instagram", group=SocialLink.GROUP_SOCIAL,
+                                         url="", members_only=False)
+        link.url = "https://instagram.com/example"
         link.save()
 
         for page in ("content:home", "content:about", "content:join"):
             with self.subTest(page=page):
-                self.assertContains(self.client.get(reverse(page)), "https://discord.gg/example")
+                self.assertContains(self.client.get(reverse(page)), "https://instagram.com/example")
+
+    def test_a_new_link_is_members_only_unless_someone_says_otherwise(self):
+        # Private by default: a leader who forgets the box should not end up
+        # publishing a chat invite on every page.
+        self.assertTrue(SocialLink.objects.create(name="Telegram", url="https://t.me/x").members_only)
 
     def test_the_two_link_groups_are_listed_under_their_own_headings(self):
         SocialLink.objects.create(name="WhatsApp", group=SocialLink.GROUP_CHAT,
@@ -94,7 +100,8 @@ class SeededSiteTests(TestCase):
 
     def test_an_unpublished_link_is_not_shown(self):
         SocialLink.objects.create(name="Facebook", group=SocialLink.GROUP_SOCIAL,
-                                  url="https://example.org/fb", published=False)
+                                  url="https://example.org/fb", published=False,
+                                  members_only=False)
         self.assertNotContains(self.client.get(reverse("content:home")), "https://example.org/fb")
 
     def test_site_settings_is_a_singleton(self):

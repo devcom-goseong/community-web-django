@@ -1,0 +1,315 @@
+/* =============================================================================
+   Member pages: accounts, the directory, profiles and events.
+
+   Only the Django site has these pages, so this file lives only in this
+   repository. Everything else in static/css is copied from the static site and
+   should be changed there first; this one is changed here.
+
+   Built entirely from the tokens in variables.css, so it follows the palette.
+   ========================================================================== */
+
+/* --- Messages ---------------------------------------------------------------- */
+.flash { display: grid; gap: var(--space-3); padding-top: var(--space-6); }
+
+.flash__item {
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius);
+  background: var(--color-primary-soft);
+  color: var(--color-heading);
+  border: 1px solid transparent;
+}
+
+.flash__item--success { background: #eef6f1; border-color: #d3e8dc; }
+.flash__item--warning { background: #fff7e6; border-color: #f5e3b8; }
+.flash__item--error { background: var(--color-invalid-field); border-color: #f2d4d1; }
+
+/* --- Panels ----------------------------------------------------------------- */
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.panel + .panel { margin-top: var(--space-5); }
+
+.panel--soft { background: var(--color-primary-soft); border-color: transparent; box-shadow: none; }
+
+.panel__title { font-size: var(--fs-h3); margin-bottom: var(--space-3); }
+
+.panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  margin-top: var(--space-5);
+}
+
+/* The two-column account overview. */
+.account-grid {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  align-items: start;
+}
+
+/* --- Where you are on the way in ------------------------------------------ */
+.journey { display: grid; gap: var(--space-3); margin-top: var(--space-4); }
+
+.journey li { display: flex; gap: var(--space-3); align-items: baseline; }
+
+.journey__mark {
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: var(--fs-micro);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  transform: translateY(0.2rem);
+}
+
+.journey li.is-done .journey__mark {
+  background: var(--color-valid);
+  border-color: var(--color-valid);
+  color: #ffffff;
+}
+
+.journey li.is-now { color: var(--color-heading); font-weight: var(--weight-semibold); }
+.journey li.is-now .journey__mark { border-color: var(--color-primary); color: var(--color-primary); }
+
+/* --- Invite links ----------------------------------------------------------- */
+.invite-list { display: grid; gap: var(--space-3); margin-top: var(--space-4); }
+
+.invite-list a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  color: var(--color-heading);
+}
+
+.invite-list a:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+/* --- Avatars: initials, no uploads ------------------------------------------ */
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  font-weight: var(--weight-semibold);
+}
+
+.avatar--lg { width: 5rem; height: 5rem; font-size: 1.6rem; }
+
+/* --- The directory ------------------------------------------------------------ */
+.filters {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+  align-items: end;
+  margin-bottom: var(--space-6);
+}
+
+.filters .field { margin: 0; }
+
+@media (max-width: 40rem) {
+  .filters { grid-template-columns: 1fr; }
+}
+
+.member-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+}
+
+.member-card {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.member-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); color: inherit; }
+
+/* The card is a link, so its contents are spans (a block inside an <a> is
+   fine in HTML5, but spans keep it valid everywhere); they are laid out as
+   blocks here so the name, handle and introduction each get their own line. */
+.member-card__body { display: block; min-width: 0; }
+.member-card__name { display: block; color: var(--color-heading); font-weight: var(--weight-semibold); }
+.member-card__handle { display: block; color: var(--color-text-muted); font-size: var(--fs-micro); overflow-wrap: anywhere; }
+.member-card__bio { display: block; margin-top: var(--space-2); font-size: var(--fs-small); color: var(--color-text); }
+.member-card .tag-list { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* "optional" on a search box is noise: every filter is optional. */
+.filters .opt { display: none; }
+
+/* Breathing room between a page heading's rule and the first panels. */
+.account-grid { padding-top: var(--space-6); }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-7);
+}
+
+.empty {
+  text-align: center;
+  padding: var(--space-8) var(--space-5);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+}
+
+/* --- A profile ---------------------------------------------------------------- */
+.profile-head { display: flex; gap: var(--space-5); align-items: center; }
+
+.profile-head__handle { color: var(--color-text-muted); }
+
+.visibility-note {
+  display: inline-block;
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-alt);
+  color: var(--color-text-muted);
+  font-size: var(--fs-micro);
+}
+
+.link-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+
+.item-list { display: grid; gap: var(--space-4); margin-top: var(--space-4); }
+
+.item-list li {
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.item-list__meta { font-size: var(--fs-micro); color: var(--color-text-muted); margin-top: var(--space-1); }
+
+/* --- Events ------------------------------------------------------------------- */
+.event-list { display: grid; gap: var(--space-4); }
+
+.event-card {
+  display: flex;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.event-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); color: inherit; }
+
+.event-card.is-cancelled { opacity: 0.7; }
+
+.date-block {
+  flex: none;
+  width: 4rem;
+  text-align: center;
+  padding: var(--space-2) 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  line-height: 1.15;
+}
+
+.date-block__day { display: block; font-size: 1.6rem; font-weight: var(--weight-semibold); }
+.date-block__month { display: block; font-size: var(--fs-micro); }
+
+.event-card__body { display: block; min-width: 0; }
+.event-card__title { color: var(--color-heading); font-weight: var(--weight-semibold); font-size: var(--fs-h4); }
+.event-card__meta { display: block; font-size: var(--fs-micro); color: var(--color-text-muted); margin-top: var(--space-1); }
+.event-card__summary { display: block; margin-top: var(--space-2); font-size: var(--fs-small); }
+
+/* The lists on these pages start right under a page heading's rule. */
+.event-list, .filters, .empty { margin-top: var(--space-6); }
+
+.pill {
+  display: inline-block;
+  padding: 0.1rem 0.65rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-micro);
+  background: var(--color-bg-alt);
+  color: var(--color-text-muted);
+  vertical-align: middle;
+}
+
+.pill--going { background: #eef6f1; color: var(--color-valid); }
+.pill--waitlist { background: #fff7e6; color: #7a5a00; }
+.pill--cancelled { background: var(--color-invalid-field); color: var(--color-invalid); }
+.pill--draft { background: var(--color-bg-alt); color: var(--color-heading); }
+
+.event-facts { display: grid; gap: var(--space-3); }
+.event-facts dt { font-size: var(--fs-micro); color: var(--color-text-muted); }
+.event-facts dd { color: var(--color-heading); }
+
+.attendees { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+
+.attendees a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  font-size: var(--fs-micro);
+  color: var(--color-heading);
+}
+
+.attendees .avatar { width: 1.75rem; height: 1.75rem; font-size: 0.7rem; }
+
+/* --- Forms that only the member pages have ------------------------------------ */
+.project-form { padding: var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-sm); }
+.project-form + .project-form { margin-top: var(--space-4); }
+
+.danger-zone { border-color: #f2d4d1; }
+
+.btn--danger { background: var(--color-invalid); border-color: var(--color-invalid); }
+.btn--danger:hover { background: #8f1f18; border-color: #8f1f18; }
+
+/* Radios for profile visibility, stacked with room to read each choice. */
+.choice-stack { display: grid; gap: var(--space-2); }
+
+.choice-stack label {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.choice-stack label:has(input:checked) { border-color: var(--color-primary); background: var(--color-primary-soft); }
+
+/* --- The home page's "next up" line ----------------------------------------- */
+.hero__next { color: var(--color-text-muted); font-size: var(--fs-small); }

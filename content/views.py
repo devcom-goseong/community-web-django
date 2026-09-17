@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 
 from .models import (
@@ -11,18 +12,15 @@ from .models import (
     Page,
     ResourceGroup,
     ResponsibilityArea,
-    SiteSettings,
-    SocialLink,
     Value,
 )
 
 
 def base_context(request, title, description, nav=""):
-    links = list(SocialLink.objects.live())
+    # The site settings and the platform links come from
+    # content.context_processors.site, on every page, so the members-only rule
+    # for invite links is applied in one place.
     return {
-        "site": SiteSettings.get(),
-        "chat_links": [x for x in links if x.group == SocialLink.GROUP_CHAT],
-        "social_links": [x for x in links if x.group == SocialLink.GROUP_SOCIAL],
         "page_title": title,
         "page_description": description,
         "nav": nav,
@@ -152,3 +150,21 @@ def join(request):
         "endpoint": settings.FORM_ENDPOINT,
     })
     return render(request, "pages/join.html", context)
+
+
+def robots(request):
+    """Keep search engines out of accounts and member pages.
+
+    The pages also say noindex themselves; this stops them being fetched at
+    all by crawlers that respect it. Events stay crawlable, because a public
+    event is exactly the kind of thing that should be findable.
+    """
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Disallow: /api/",
+        "Disallow: /account/",
+        "Disallow: /members/",
+        "",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")

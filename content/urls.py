@@ -6,6 +6,7 @@ app_name = "content"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("robots.txt", views.robots, name="robots"),
     path("about/", views.about, name="about"),
     path("activities/", views.activities, name="activities"),
     path("activities/<slug:slug>/", views.activity, name="activity"),

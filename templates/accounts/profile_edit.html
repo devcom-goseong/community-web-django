@@ -1,0 +1,88 @@
+{% extends "base.html" %}{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/form.css' %}">{% endblock %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Your account" heading="Edit your profile" lead="What other members see about you, and who can see it." %}
+
+  <section class="section section--flush-top">
+    <div class="wrap wrap--narrow">
+      <form class="form" method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.errors or projects.non_form_errors %}
+          <div class="flash__item flash__item--error" role="alert">
+            Some of this needs another look — the fields that need attention are marked below.
+            {% for error in projects.non_form_errors %}<br>{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="panel">
+          <h2 class="panel__title">Who can see your profile</h2>
+          <fieldset class="fieldset"{% if form.profile_visibility.errors %} data-invalid="true"{% endif %}>
+            <legend class="visually-hidden">{{ form.profile_visibility.label }}</legend>
+            <div class="choice-stack">
+              {% for choice in form.profile_visibility %}
+                <label for="{{ choice.id_for_label }}">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+              {% endfor %}
+            </div>
+            <p class="field__hint">{{ form.profile_visibility.help_text }}</p>
+          </fieldset>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel__title">About you</h2>
+          <div class="fields">
+            {% include "accounts/_field.html" with field=form.display_name %}
+            {% include "accounts/_field.html" with field=form.handle %}
+            {% include "accounts/_field.html" with field=form.bio %}
+          </div>
+          {% include "accounts/_field.html" with field=form.interests %}
+        </div>
+
+        <div class="panel">
+          <h2 class="panel__title">Where else to find you</h2>
+          <div class="fields">
+            {% include "accounts/_field.html" with field=form.github_url %}
+            {% include "accounts/_field.html" with field=form.linkedin_url %}
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel__title">Things you have made</h2>
+          <p class="muted">Up to eight. A repository, a demo, a design, a write-up — whatever you would show someone.</p>
+          {{ projects.management_form }}
+          <div class="mt-5">
+            {% for project in projects %}
+              <div class="project-form">
+                {{ project.id }}
+                <div class="fields">
+                  {% include "accounts/_field.html" with field=project.title %}
+                  {% include "accounts/_field.html" with field=project.url %}
+                  {% include "accounts/_field.html" with field=project.description %}
+                </div>
+                {% if project.instance.pk %}
+                  <label class="consent mt-4" for="{{ project.DELETE.id_for_label }}">{{ project.DELETE }} <span>Remove this one</span></label>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel__title">Student details</h2>
+          <p class="muted">Only the leadership team sees these. They are never shown on your profile.</p>
+          <div class="fields mt-5">
+            {% include "accounts/_field.html" with field=form.student %}
+            {% include "accounts/_field.html" with field=form.student_id %}
+          </div>
+        </div>
+
+        <div class="form__actions">
+          <button class="btn" type="submit">Save</button>
+          <a class="btn btn--ghost btn--plain" href="{% url 'accounts:dashboard' %}">Back to your account</a>
+        </div>
+      </form>
+    </div>
+  </section>
+{% endblock %}

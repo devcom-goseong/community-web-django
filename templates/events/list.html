@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Events" heading="What is coming up" lead="Sign up, and you will get a reminder the day before." %}
+
+  <section class="section section--flush-top">
+    <div class="wrap wrap--narrow">
+      {% if upcoming %}
+        <ul class="event-list">
+          {% for event in upcoming %}
+            <li>
+              <a class="event-card{% if event.is_cancelled %} is-cancelled{% endif %}" href="{{ event.get_absolute_url }}">
+                <span class="date-block" aria-hidden="true">
+                  <span class="date-block__day">{{ event.starts_at|date:"j" }}</span>
+                  <span class="date-block__month">{{ event.starts_at|date:"M" }}</span>
+                </span>
+                <span class="event-card__body">
+                  <span class="event-card__title">{{ event.title }}</span>
+                  {% if event.status == "draft" %}<span class="pill pill--draft">Draft</span>{% endif %}
+                  {% if event.is_cancelled %}<span class="pill pill--cancelled">Cancelled</span>
+                  {% elif event.my_status == "going" %}<span class="pill pill--going">You are going</span>
+                  {% elif event.my_status == "waitlist" %}<span class="pill pill--waitlist">On the waiting list</span>{% endif %}
+                  {% if event.visibility == "members" %}<span class="pill">Members</span>{% endif %}
+                  <span class="event-card__meta">
+                    {{ event.starts_at|date:"l, H:i T" }}
+                    {% if event.location %} &middot; {{ event.location }}{% elif event.is_online %} &middot; Online{% endif %}
+                    {% if event.capacity and not event.is_cancelled %}
+                      &middot; {% if event.spots_left %}{{ event.spots_left }} place{{ event.spots_left|pluralize }} left{% else %}Full — waiting list open{% endif %}
+                    {% endif %}
+                  </span>
+                  <span class="event-card__summary">{{ event.summary }}</span>
+                </span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty">
+          <p>Nothing is scheduled right now.</p>
+          <p class="mt-4">The weekly meeting and the study groups run all term — <a href="{% url 'content:activities' %}">see the activities</a>.</p>
+        </div>
+      {% endif %}
+
+      {% if not viewer_can_see_members %}
+        <p class="small muted mt-7">
+          {% if user.is_authenticated %}Some events are only for members, and appear here once your membership is approved.
+          {% else %}Some events are only for members. <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">Sign in</a> to see everything you can join.{% endif %}
+        </p>
+      {% endif %}
+
+      {% if past %}
+        <h2 class="mt-9">Recently</h2>
+        <ul class="item-list">
+          {% for event in past %}
+            <li>
+              <a href="{{ event.get_absolute_url }}">{{ event.title }}</a>
+              <p class="item-list__meta">{{ event.starts_at|date:"j F Y" }}{% if event.activity %} &middot; {{ event.activity.name }}{% endif %}</p>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

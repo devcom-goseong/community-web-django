@@ -1,0 +1,64 @@
+{% extends "base.html" %}{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/form.css' %}">{% endblock %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Members" heading="Find people to build with" lead="Only members who chose to be listed appear here." %}
+
+  <section class="section section--flush-top">
+    <div class="wrap">
+      <form class="filters" method="get" role="search">
+        {% include "accounts/_field.html" with field=filters.q %}
+        {% include "accounts/_field.html" with field=filters.interest %}
+        <button class="btn btn--plain" type="submit">Search</button>
+      </form>
+
+      {% if page.object_list %}
+        <p class="muted small mb-6">
+          {% if query or interest %}{{ page.paginator.count }} matching{% else %}{{ page.paginator.count }} listed{% endif %}
+          {% if query or interest %}&middot; <a href="{% url 'members:directory' %}">Clear</a>{% endif %}
+        </p>
+        <ul class="member-grid">
+          {% for person in page.object_list %}
+            <li>
+              <a class="member-card" href="{{ person.get_absolute_url }}">
+                <span class="avatar" aria-hidden="true">{{ person.initials }}</span>
+                <span class="member-card__body">
+                  <span class="member-card__name">{{ person.display_name }}</span>
+                  <span class="member-card__handle">@{{ person.handle }}</span>
+                  {% if person.bio %}<span class="member-card__bio">{{ person.bio|truncatechars:110 }}</span>{% endif %}
+                  {% if person.interests %}
+                    <span class="tag-list mt-4">{% for name in person.interests|slice:":3" %}<span class="tag">{{ name }}</span>{% endfor %}</span>
+                  {% endif %}
+                </span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+
+        {% if page.has_other_pages %}
+          <nav class="pagination" aria-label="Pages">
+            {% if page.has_previous %}<a class="btn btn--ghost btn--plain" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.previous_page_number }}">Previous</a>{% endif %}
+            <span class="muted small">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+            {% if page.has_next %}<a class="btn btn--ghost btn--plain" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.next_page_number }}">Next</a>{% endif %}
+          </nav>
+        {% endif %}
+      {% else %}
+        <div class="empty">
+          {% if query or interest %}
+            <p>Nobody matches that yet. <a href="{% url 'members:directory' %}">Show everyone</a></p>
+          {% else %}
+            <p>Nobody is listed yet.</p>
+            <p class="mt-4">Be the first: set your profile to <strong>Members</strong> and you will appear here.</p>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <p class="small muted mt-8">
+        The directory is for finding people to learn and build with. Please do not copy it, or use it
+        to recruit or sell — see the <a href="{% url 'content:page' 'rules' %}">community rules</a>.
+        {% if viewer_member %}<a href="{% url 'accounts:profile_edit' %}">Change how you appear</a>.{% endif %}
+      </p>
+    </div>
+  </section>
+{% endblock %}

@@ -1,120 +1,131 @@
 {% extends "base.html" %}{% load static %}
 
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/form.css' %}">{% endblock %}
-
 {% block content %}
-  {% include "partials/page_head.html" with eyebrow="Account" heading="Your account" lead="Your details, and where things stand." %}
+  <div class="page-head">
+    <div class="wrap">
+      <p class="caption">Your account</p>
+      <h1 class="page-head__title">Hello, {{ member.display_name }}</h1>
+    </div>
+  </div>
 
-  <section class="section section--flush-top" aria-labelledby="status-title">
-    <div class="wrap split">
+  <section class="section section--flush-top">
+    <div class="wrap account-grid">
 
-      <div class="split__aside">
-        <div class="plate"><h2 class="plate__title" id="status-title">Where things stand</h2></div>
+      <div>
+        {# Where they are on the way in, and the one thing to do next. #}
+        <div class="panel{% if state != 'member' %} panel--soft{% endif %}">
+          {% if state == "member" %}
+            <h2 class="panel__title">You are a member</h2>
+            <p class="muted">Since {{ member.approved_at|date:"F Y" }}.</p>
+          {% else %}
+            <h2 class="panel__title">Getting in</h2>
+            <ol class="journey">
+              <li class="is-done"><span class="journey__mark" aria-hidden="true">&check;</span> Account created</li>
+              <li class="{% if member.is_verified %}is-done{% else %}is-now{% endif %}">
+                <span class="journey__mark" aria-hidden="true">{% if member.is_verified %}&check;{% else %}2{% endif %}</span>
+                Confirm your email address
+              </li>
+              <li class="{% if state == 'pending' %}is-now{% endif %}">
+                <span class="journey__mark" aria-hidden="true">3</span>
+                The leadership team approves your membership
+              </li>
+            </ol>
 
-        <dl class="deflist mt-6">
-          <div>
-            <dt>Email</dt>
-            <dd>
-              {{ member.email }}
-              {% if not member.is_verified %}<span class="tag">Not confirmed</span>{% endif %}
-            </dd>
-          </div>
-          <div>
-            <dt>Membership</dt>
-            <dd>{{ member.get_status_display }}</dd>
-          </div>
-          <div>
-            <dt>Account created</dt>
-            <dd>{{ member.created_at|date:"j F Y" }}</dd>
-          </div>
-        </dl>
+            {% if state == "unconfirmed" %}
+              <p class="mt-5">We sent a link to <strong>{{ member.email }}</strong>. Nothing else is sent to that address until it is confirmed.</p>
+              <form method="post" action="{% url 'accounts:resend_verification' %}" class="panel__actions">
+                {% csrf_token %}
+                <button class="btn btn--ghost" type="submit">Send the link again</button>
+              </form>
+            {% elif state == "pending" %}
+              <p class="mt-5">Your membership is being reviewed. You will get an email when you are approved — then the community chats, the members directory and members-only events open up.</p>
+            {% elif state == "inactive" %}
+              <p class="mt-5">Your membership is {{ member.get_status_display|lower }}. If you think that is a mistake, <a href="{% url 'content:join' %}">contact the leadership team</a>.</p>
+            {% endif %}
+          {% endif %}
+        </div>
 
-        {% if not member.is_verified %}
-          <div class="note mt-7">
-            <p class="note__title">Confirm your email address</p>
-            <p class="small muted mt-4">
-              We sent a link to {{ member.email }}. Until it is opened we cannot be sure the
-              address reaches you, so nothing else is sent to it.
-            </p>
-            <form method="post" action="{% url 'accounts:resend_verification' %}" class="mt-5">
-              {% csrf_token %}
-              <button class="btn btn--ghost btn--plain" type="submit">Send the link again</button>
-            </form>
+        {% if state == "member" %}
+          <div class="panel">
+            <h2 class="panel__title">Where we talk</h2>
+            {% if invite_links %}
+              <p class="muted">These links are just for members. Please do not share them outside the community.</p>
+              <ul class="invite-list">
+                {% for link in invite_links %}
+                  <li><a href="{{ link.url }}" rel="noopener noreferrer">{{ link.name }} <span aria-hidden="true">&rarr;</span></a></li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="muted">The invite links are not set up yet. They will appear here as soon as they are.</p>
+            {% endif %}
           </div>
         {% endif %}
 
-        <p class="small muted mt-7">
-          <a href="{% url 'accounts:password_change' %}">Change your password</a>
-        </p>
-        <form method="post" action="{% url 'accounts:logout' %}" class="mt-4">
-          {% csrf_token %}
-          <button class="btn btn--ghost btn--plain" type="submit">Sign out</button>
-        </form>
+        <div class="panel">
+          <h2 class="panel__title">Your events</h2>
+          {% if upcoming %}
+            <ul class="item-list">
+              {% for registration in upcoming %}
+                <li>
+                  <a href="{{ registration.event.get_absolute_url }}">{{ registration.event.title }}</a>
+                  {% if registration.status == "waitlist" %}<span class="pill pill--waitlist">Waiting list</span>{% endif %}
+                  {% if registration.event.is_cancelled %}<span class="pill pill--cancelled">Cancelled</span>{% endif %}
+                  <p class="item-list__meta">{{ registration.event.starts_at|date:"D j M, H:i T" }}</p>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="muted">You are not signed up for anything yet.</p>
+          {% endif %}
+          <div class="panel__actions"><a class="link-arrow" href="{% url 'events:list' %}">See what is coming up</a></div>
+        </div>
       </div>
 
-      <div class="split__body">
-
-        {% if messages %}
-          {% for message in messages %}
-            <div class="form__status" role="status"
-                 data-state="{% if message.tags == 'error' %}error{% else %}success{% endif %}">
-              <span class="form__status-mark" aria-hidden="true">{% if message.tags == 'error' %}!{% else %}&check;{% endif %}</span>
-              <div><p class="form__status-text">{{ message }}</p></div>
-            </div>
-          {% endfor %}
-        {% endif %}
-
-        <div class="plate mt-8"><h2 class="plate__title">Your details</h2></div>
-        <p class="plate__note">
-          These are yours to change. Your membership status is not — that is the leadership
-          team's to set, after a review.
-        </p>
-
-        <form class="form" method="post" novalidate>
-          {% csrf_token %}
-          <fieldset class="fieldset">
-            <legend class="fieldset__legend">About you</legend>
-            <div class="fields">
-              {% include "accounts/_field.html" with field=form.display_name %}
-              {% include "accounts/_field.html" with field=form.student %}
-              {% include "accounts/_field.html" with field=form.student_id %}
-              {% include "accounts/_field.html" with field=form.bio %}
-            </div>
-          </fieldset>
-
-          {% include "accounts/_field.html" with field=form.interests %}
-
-          <fieldset class="fieldset">
-            <legend class="fieldset__legend">Where else to find you</legend>
-            <div class="fields">
-              {% include "accounts/_field.html" with field=form.github_url %}
-              {% include "accounts/_field.html" with field=form.linkedin_url %}
-            </div>
-          </fieldset>
-
-          <div class="form__actions">
-            <button class="btn" type="submit">Save</button>
+      <div>
+        <div class="panel">
+          <h2 class="panel__title">Your profile</h2>
+          <p>
+            {% if member.profile_visibility == "hidden" %}Only you and the leadership team can see it.
+            {% elif member.profile_visibility == "members" %}Visible to members, and listed in the members directory.
+            {% else %}Visible to anyone with the link, and listed in the members directory.{% endif %}
+          </p>
+          <div class="panel__actions">
+            <a class="btn" href="{% url 'accounts:profile_edit' %}">Edit your profile</a>
+            <a class="btn btn--ghost" href="{{ member.get_absolute_url }}">View it</a>
           </div>
-        </form>
+          {% if state == "member" %}
+            <p class="mt-5"><a class="link-arrow" href="{% url 'members:directory' %}">Find other members</a></p>
+          {% endif %}
+        </div>
 
         {% if applications %}
-          <div class="plate mt-10"><h2 class="plate__title">What you have sent us</h2></div>
-          <p class="plate__note">
-            Anything sent through the join form from this address.
-          </p>
-          <dl class="deflist mt-6">
-            {% for application in applications %}
-              <div>
-                <dt>{{ application.created_at|date:"j F Y" }}</dt>
-                <dd>
-                  {{ application.get_intent_display }} &middot; {{ application.get_status_display }}
-                </dd>
-              </div>
-            {% endfor %}
-          </dl>
+          <div class="panel">
+            <h2 class="panel__title">What you have sent us</h2>
+            <ul class="item-list">
+              {% for application in applications %}
+                <li>
+                  {{ application.get_intent_display }}
+                  <p class="item-list__meta">{{ application.created_at|date:"j F Y" }} &middot; {{ application.get_status_display }}</p>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
         {% endif %}
 
+        <div class="panel">
+          <h2 class="panel__title">Your account</h2>
+          <p class="muted">Signed in as {{ member.email }}.</p>
+          <div class="panel__actions">
+            <a class="btn btn--ghost" href="{% url 'accounts:password_change' %}">Change password</a>
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button class="btn btn--ghost" type="submit">Sign out</button>
+            </form>
+          </div>
+          <p class="small mt-5"><a href="{% url 'accounts:close' %}">Close your account</a></p>
+        </div>
       </div>
+
     </div>
   </section>
 {% endblock %}

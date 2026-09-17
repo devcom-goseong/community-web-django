@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% comment %}
+Shown when a member page is not available to the person asking.
+
+For a profile or an event, the same page is shown whether the thing does not
+exist or simply is not for this viewer, so the page cannot be used to find out
+which profiles or members-only events exist. What changes is the advice, which
+depends only on who is asking.
+{% endcomment %}
+
+{% block title %}Not available — {{ site.community_name }}{% endblock %}
+
+{% block content %}
+  <section class="section">
+    <div class="wrap wrap--narrow">
+      {% if kind == "directory" %}
+        <h1 class="page-head__title">The members directory is for members</h1>
+      {% else %}
+        <h1 class="page-head__title">This {% if kind == "event" %}event{% else %}profile{% endif %} is not available</h1>
+        <p class="lead mt-5">It may not exist, or it may only be visible to members of the community.</p>
+      {% endif %}
+
+      <div class="panel mt-7">
+        {% if state == "anonymous" %}
+          <p>If you are a member, sign in and try again.</p>
+          <div class="panel__actions">
+            <a class="btn" href="{% url 'accounts:login' %}?next={{ next|urlencode }}">Sign in</a>
+            <a class="btn btn--ghost" href="{% url 'content:join' %}">How to join</a>
+          </div>
+        {% elif state == "unconfirmed" %}
+          <p>Confirm your email address first. The link is in the welcome email we sent when you created your account.</p>
+          <div class="panel__actions">
+            <a class="btn" href="{% url 'accounts:dashboard' %}">Go to your account</a>
+          </div>
+        {% elif state == "pending" %}
+          <p>Your membership is waiting for the leadership team to review it. You will get an email as soon as you are approved, and this will open up.</p>
+          <div class="panel__actions">
+            <a class="btn btn--ghost" href="{% url 'accounts:dashboard' %}">Go to your account</a>
+          </div>
+        {% elif state == "inactive" %}
+          <p>Your membership is paused at the moment. If you think that is a mistake, get in touch with the leadership team.</p>
+          <div class="panel__actions">
+            <a class="btn btn--ghost" href="{% url 'content:join' %}">Contact the team</a>
+          </div>
+        {% else %}
+          <p>There is nothing here you can open right now.</p>
+          <div class="panel__actions">
+            <a class="btn btn--ghost" href="{% url 'content:home' %}">Back to the home page</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

@@ -1,11 +1,15 @@
 # The Django site
 
-A Django app that does two things:
+A Django app that does four things:
 
 1. **Renders every public page from the database**, so the copy is editable in
    the admin by people who will never open the CSS.
 2. **Receives the join / contact form**, stores each application so the
    leadership team can review them in one place, and sends the two emails.
+3. **Runs member accounts**: sign-up, a members directory, profiles people can
+   share, and the community's invite links, shown only to approved members.
+4. **Runs events**: sign-up with places and a waiting list, calendar files,
+   reminders the day before, and attendance that shows up on profiles.
 
 **It is not live yet.** The static Netlify build is still the site visitors
 see. This runs alongside it until the team decides to switch over.
@@ -18,16 +22,20 @@ Netlify (dev-comm.netlify.app)     this app (your VPS)
                                      POST /api/register
 ```
 
-Both read the same `css/`, `js/` and `assets/` from the repository root, so
-there is one copy of the design and not two that drift apart.
+The stylesheets, scripts and images in `static/` began as copies of the static
+site's. `static/css/members.css` exists only here, because only this app has
+member pages; the other stylesheets should be changed in the static site's
+repository first and copied across, so the two front ends do not drift apart.
 
 ## What is editable in the admin
 
 | Screen | What it controls |
 | --- | --- |
 | Site settings | Community name, university, founding date and the footer text |
-| Social links | Every platform the community is on — Facebook, LinkedIn, GitHub, Instagram, X, Discord, WhatsApp, or anything added later. Each one is a row, so adding a platform is a form in the admin rather than a migration. Two groups: **Where we talk** and **Follow us**. Leave an address blank and the site shows a "Soon" badge instead of a dead link; fill it in and it becomes a real link on every page at once |
-| Members | Everyone with an account: their status, whether they have confirmed their email address, and what they accepted when they signed up |
+| Social links | Every platform the community is on — Facebook, LinkedIn, GitHub, Instagram, X, Discord, WhatsApp, or anything added later. Each one is a row, so adding a platform is a form in the admin rather than a migration. Two groups: **Where we talk** and **Follow us**. Leave an address blank and the site shows a "Soon" badge instead of a dead link. **Members only** is ticked by default: the address is then only ever sent to approved members who are signed in, and everyone else sees the name with a "Members" badge. Untick it only for public pages people can follow |
+| Members | Everyone with an account: status, email confirmation, profile visibility, their projects, and what they accepted when they signed up. Approve, pause, remove and hide-profile are actions on the list |
+| Events | Title, time, place, online link, capacity, who can see it and who can register. The registrations are listed on each event, with role and attendance editable. Actions: publish, cancel and notify everyone, mark attendance, export attendees |
+| Registrations | Every sign-up across all events, for marking attendance and roles in bulk |
 | Pages | The rules, terms, privacy notice, first month, accessibility and contributing pages — each with its own sections, which also build the contents list in the margin |
 | Activities | All seven, with their cadence tags, index copy and the sections on their own pages |
 | Home page cards and facts | The four cards and the at-a-glance strip |
@@ -50,16 +58,122 @@ it at setup, and edit in the admin after that.
 ## Member accounts
 
 Anyone can use the join form without an account — that has not changed. An
-account is what comes afterwards: it is how somebody signs in, keeps their own
-details current, and sees where their application got to.
+account is what comes afterwards: it is how somebody gets into the community's
+chats, finds people to build with, signs up for events and keeps a profile.
 
 | Address | What it is |
 | --- | --- |
 | `/account/sign-up/` | Create an account. Requires accepting the rules, terms and privacy notice, exactly as the join form does |
 | `/account/sign-in/` | Sign in with an email address |
-| `/account/me/` | A member's own page: their details, their confirmation state, and the applications sent from their address |
+| `/account/me/` | A member's own page: where they are on the way in, the invite links once approved, their events, their profile |
+| `/account/profile/` | Edit the profile: name, address, who can see it, introduction, interests, links, projects |
+| `/account/close/` | Close the account. Deletes everything on it, after asking for the password |
 | `/account/verify/<token>/` | Confirms an address from the link in the welcome email |
 | `/account/password/reset/` | Django's password reset, using this site's templates and the same SMTP account |
+| `/members/` | The members directory. Approved members and the leadership team only |
+| `/members/<handle>/` | A profile |
+| `/events/` | Upcoming and recent events |
+| `/events/<slug>/` | An event: register, cancel, add to calendar |
+
+### Who can see what
+
+Everything below is decided in one place, `accounts/access.py`, and tested as a
+matrix in `accounts/test_members.py` and `events/tests.py`.
+
+| | Visitor | Signed up, email not confirmed | Awaiting review | Approved member | Leadership team |
+| --- | --- | --- | --- | --- | --- |
+| Invite links (Discord, WhatsApp) | no | no | no | **yes** | yes |
+| Members directory | no | no | no | **yes** | yes |
+| Profile set to "Only me" | no | no | no | no (owner yes) | yes |
+| Profile set to "Members" | no | no | no | **yes** | yes |
+| Profile set to "Anyone with the link" | **yes** | yes | yes | yes | yes |
+| Events marked "members only" | no | no | no | **yes** | yes |
+| Register for an event open to members | no | no | no | **yes** | only with a member account of their own |
+| Register for an event open to any confirmed account | no | no | **yes** | yes | only with a member account of their own |
+| An event's online call link | only people who have a place at that event |||||
+
+A paused or removed member loses all of it at once, and their profile
+disappears for everyone else whatever it was set to. Anything a person may not
+see is answered with the same "not available" page whether it exists or not, so
+the site cannot be used to discover which members-only events or profiles exist.
+
+### Approving people
+
+- **From the Members list:** select people, choose *Approve as members*. They get
+  an email saying they are in. The email does not contain the invite links —
+  emails get forwarded — it sends them to their account page, where the links are.
+- **By accepting an application:** *Mark as accepted* on an application also
+  approves a matching account with a confirmed email address.
+- **Applied first, signed up later:** an account whose address matches an
+  accepted application is approved automatically when its owner confirms the
+  address. Only on confirmation, or anyone could sign up with an accepted
+  applicant's email and inherit the approval.
+- **Pausing or removing** someone gives up the event places they held, and the
+  waiting list moves up. Removing also sets their profile back to hidden.
+
+Change a member's status with the actions or the Members edit page, never
+anywhere else: those are what send the emails and move the waiting lists.
+
+### Invite links
+
+- Tick **Members only** for any invite link. It is ticked by default, so a new
+  chat platform added in a hurry is private until someone decides otherwise.
+- Make Discord invites **never expire** (Discord's default is seven days), or
+  the link on the account page will quietly stop working.
+- If an invite link leaks, make a new one on the platform, revoke the old one
+  there, and paste the new one into the admin. It changes everywhere at once.
+- Never put an invite link in the static Netlify site's HTML. Anything there is
+  public. There is a comment in its footer saying so.
+
+### Profiles and the directory
+
+- **Private by default.** Nobody appears in the directory until they choose to.
+  Accounts created before profiles existed were all set to hidden.
+- **Never shown:** email address, student ID, or whether someone is a student.
+- **Profile addresses** (`/members/sam-park/`) are generated from the name. A name
+  with no Latin letters, such as 김민수, gets a neutral one like `member-3fa9c1`,
+  because a Korean name produces an empty web address otherwise. Members can
+  change it; some words, like `admin` and `me`, are reserved.
+- **Links** must be http or https, and the GitHub and LinkedIn fields must point
+  at those sites, so a profile cannot be used to host a link to anything.
+- **Not indexed.** Every profile page asks search engines not to index it, and
+  `robots.txt` keeps crawlers out of `/members/` and `/account/`.
+- **Moderation:** *Hide profile* on the Members list takes a profile down without
+  touching the membership. The projects a member lists are editable on their
+  admin page.
+
+### Events
+
+- **Places and the waiting list.** When an event is full, sign-ups join a waiting
+  list. When someone with a place cancels — or is paused, or deletes their
+  account — the first person waiting gets the place and an email. Nobody can
+  jump the list, and two people cannot take the last place at the same moment:
+  every change locks the event row first.
+- **Raising the capacity** in the admin moves the waiting list up as soon as you
+  save.
+- **Cancel, do not delete.** *Cancel and notify everyone who signed up* emails
+  them all. An event with registrations cannot be deleted at all, because that
+  would erase attendance from people's profiles.
+- **Attendance** is marked after the event: *Mark everyone with a place as
+  attended* on the events list, then untick anyone who did not come. Only
+  attended events appear on profiles, with the role (presented, organised, helped).
+- **Exports** open cleanly in Excel, Korean names included, and anything a member
+  typed that a spreadsheet would run as a formula is neutralised.
+- **Times** are entered and shown in Korean time, always labelled KST. Calendar
+  files use UTC, so they land at the right local time for anyone, anywhere.
+
+### Reminders
+
+`python manage.py send_event_reminders` emails everyone with a place at an event
+starting within `EVENT_REMINDER_HOURS` (24 by default). In production the
+`scheduler` service in `docker-compose.prod.yml` runs it every hour. It is safe
+to run twice at once, retries anything that failed to send on the next run, and
+does not remind someone who only signed up inside the window.
+
+**Gmail's sending limit** is about 500 messages a day for an ordinary account.
+Confirmations, waiting-list emails, reminders and cancellations all count. A
+large event cancelled on a busy day could reach it; if the community grows past
+that, move email to a transactional provider — it is one setting.
 
 Four decisions worth knowing about:
 
@@ -79,9 +193,11 @@ Four decisions worth knowing about:
 - **An account is not membership.** A new account is `Awaiting review` until
   somebody on the leadership team approves it in the admin.
 
-Sign-up shares the join form's rate limiter but not its budget: the limiter
-takes a `scope`, so the two cannot starve each other on a shared university
-connection.
+Every form shares one rate limiter, `config/ratelimit.py`, with a separate
+allowance per form so they cannot starve each other on a shared university
+connection. It trusts the address nginx saw (`X-Real-IP`), not the first entry
+of `X-Forwarded-For`: that entry is written by the client, and an earlier
+version that read it could be bypassed by sending a made-up header.
 
 ---
 
@@ -158,18 +274,28 @@ ruff check .
 python manage.py check --deploy --fail-level WARNING
 ```
 
-Twenty-seven tests. Sixteen cover the form endpoint: validation, the required agreement, the
-honeypot, the timing trap, rate limiting, CR/LF stripping from mail headers,
-HTML escaping, the no-JavaScript path, and that an application survives an
-email outage. One test asserts the submitter's IP is never written to the
-database, because the privacy notice says so and a promise in prose is worth
-less than a test.
+About 150 tests, which run in a few seconds.
 
-The other eleven cover the content: every page renders from the database, every
-activity has a page, unpublishing something removes it from the site *and*
-returns a 404, editing a section changes the rendered page, filling in a
-platform URL turns the "Soon" tag into a link, and re-running the seed does not
-duplicate anything.
+- **The form endpoint:** validation, the required agreement, the honeypot, the
+  timing trap, rate limiting, CR/LF stripping from mail headers, HTML escaping,
+  the no-JavaScript path, and that an application survives an email outage. One
+  test asserts the submitter's IP is never written to the database, because the
+  privacy notice says so and a promise in prose is worth less than a test.
+- **Accounts and members:** who can see invite links, the directory and each
+  profile setting, run as a matrix over every stage of membership; that email
+  addresses and student details never appear; handles, including Korean names;
+  link validation; approving, pausing and removing; accepted applicants being
+  approved only after confirming; and closing an account.
+- **Events:** who can see and register for what; places, the waiting list and
+  its order; nobody jumping the queue; places freed by pausing or deleting an
+  account; the online link staying private; cancelling and notifying; calendar
+  files, including folding Korean text; the spreadsheet export; and the
+  reminder job sending once, skipping what it should and retrying failures.
+- **The rate limiter:** that a made-up `X-Forwarded-For` header does not reset it.
+- **The content:** every page renders from the database, unpublishing removes a
+  page and returns a 404, and re-running the seed does not duplicate anything.
+
+Tests use a fast password hasher; nothing outside `manage.py test` does.
 
 ---
 
@@ -182,7 +308,9 @@ duplicate anything.
 3. Create a directory, and put three things in it:
    - `docker-compose.prod.yml`
    - `nginx/templates/default.conf.template`
-   - `.env` (from `.env.example`, filled in — `APP_HOST` must match the DNS name)
+   - `.env` (from `.env.example`, filled in — `APP_HOST` must match the DNS name,
+     and `APP_URL` must be `https://` plus that name, or links in reminder
+     emails will be wrong; `check --deploy` warns about it)
 4. Issue the certificate **before** starting nginx, because the config
    references files that do not exist yet:
 
@@ -202,11 +330,17 @@ duplicate anything.
    0 4 * * * cd /path/to/app && docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload
    ```
 
-6. Create the first admin user:
+6. Create the first admin user, and load the site's copy:
 
    ```bash
    docker compose -f docker-compose.prod.yml exec web python manage.py createsuperuser
+   docker compose -f docker-compose.prod.yml exec web python manage.py seed_content
    ```
+
+7. The `scheduler` service starts with everything else and sends event
+   reminders hourly. Check it is running with
+   `docker compose -f docker-compose.prod.yml logs scheduler` — each run prints
+   one line saying how many reminders went out.
 
 ### Continuous deployment
 
@@ -276,7 +410,17 @@ browser will block the request.
 | `applications/views.py` | `POST /api/register`, answering in the shape the existing front end already expects |
 | `applications/emails.py` | Both messages, over a single SMTP connection |
 | `applications/admin.py` | The review screen: filters, search, bulk accept/decline |
-| `accounts/models.py` | `Member`, the community-facing half of an account |
+| `accounts/models.py` | `Member`, the community-facing half of an account, and `MemberProject` |
+| `accounts/access.py` | Who may see what. Every member page asks this |
+| `accounts/services.py` | Status changes and their consequences; approving accepted applicants |
+| `accounts/validators.py` | Profile addresses, and the rules for links on profiles |
+| `accounts/checks.py` | Deployment checks, including one that catches a localhost `APP_URL` |
+| `events/models.py` | `Event` and `Registration` |
+| `events/services.py` | Registering, cancelling and the waiting list, under a row lock |
+| `events/ics.py` | Calendar files |
+| `events/management/commands/send_event_reminders.py` | The reminder job |
+| `content/context_processors.py` | Where members-only invite links are withheld, for every page |
+| `config/ratelimit.py` | The shared rate limiter |
 | `accounts/backends.py` | Signing in with an email address rather than a username |
 | `accounts/forms.py` | Sign-up, sign-in and profile forms, in the site's own markup |
 | `accounts/emails.py` | The welcome email and the signed confirmation link |

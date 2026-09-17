@@ -31,14 +31,17 @@ from content.models import (
 # blank on purpose: the site shows a "Soon" badge until someone fills one in
 # from the admin, which is more honest than a link that goes nowhere. GitHub is
 # the exception, because the organisation already exists.
+#
+# The last column is members_only. The chats are invite links, so only approved
+# members see their addresses; the "follow us" pages are public.
 SOCIAL_LINKS = [
-    ("Discord", "chat", ""),
-    ("WhatsApp", "chat", ""),
-    ("GitHub", "social", "https://github.com/devcom-goseong"),
-    ("LinkedIn", "social", ""),
-    ("Instagram", "social", ""),
-    ("Facebook", "social", ""),
-    ("X", "social", ""),
+    ("Discord", "chat", "", True),
+    ("WhatsApp", "chat", "", True),
+    ("GitHub", "social", "https://github.com/devcom-goseong", False),
+    ("LinkedIn", "social", "", False),
+    ("Instagram", "social", "", False),
+    ("Facebook", "social", "", False),
+    ("X", "social", "", False),
 ]
 
 FACTS = [
@@ -225,9 +228,13 @@ class Command(BaseCommand):
         # Only the group and the ordering are managed here. The address is
         # written once if the row is new and left alone afterwards, so that
         # re-running the seed never wipes a link somebody has since added.
-        for index, (name, group, url) in enumerate(SOCIAL_LINKS):
+        for index, (name, group, url, members_only) in enumerate(SOCIAL_LINKS):
+            # members_only is set when the row is created and never overwritten
+            # afterwards: once someone has decided it in the admin, a re-run of
+            # the seed must not quietly publish an invite link.
             link, created = SocialLink.objects.get_or_create(
-                name=name, defaults={"url": url, "group": group, "order": index * 10})
+                name=name, defaults={"url": url, "group": group, "order": index * 10,
+                                     "members_only": members_only})
             if not created:
                 link.group = group
                 link.order = index * 10

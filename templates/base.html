@@ -6,6 +6,7 @@
 
 <title>{% block title %}{{ page_title }} — {{ site.community_name }}{% endblock %}</title>
 <meta name="description" content="{{ page_description }}">
+{% if noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
 <link rel="canonical" href="{{ request.build_absolute_uri }}">
 
 <meta property="og:type" content="website">
@@ -36,6 +37,7 @@
 <link rel="stylesheet" href="{% static 'css/variables.css' %}">
 <link rel="stylesheet" href="{% static 'css/base.css' %}">
 <link rel="stylesheet" href="{% static 'css/components.css' %}">
+<link rel="stylesheet" href="{% static 'css/members.css' %}">
 {% block extra_css %}{% endblock %}
 <script src="{% static 'js/site.js' %}" defer></script>
 {% block extra_js %}{% endblock %}
@@ -60,19 +62,33 @@
       <ul class="nav__list">
         <li><a class="nav__link" href="{% url 'content:about' %}"{% if nav == 'about' %} aria-current="page"{% endif %}>About</a></li>
         <li><a class="nav__link" href="{% url 'content:activities' %}"{% if nav == 'activities' %} aria-current="page"{% endif %}>Activities</a></li>
-        <li><a class="nav__link" href="{% url 'content:page' 'start' %}"{% if nav == 'start' %} aria-current="page"{% endif %}>Start here</a></li>
+        <li><a class="nav__link" href="{% url 'events:list' %}"{% if nav == 'events' %} aria-current="page"{% endif %}>Events</a></li>
+        {% if viewer_can_see_members %}
+          <li><a class="nav__link" href="{% url 'members:directory' %}"{% if nav == 'members' %} aria-current="page"{% endif %}>Members</a></li>
+        {% else %}
+          <li><a class="nav__link" href="{% url 'content:page' 'start' %}"{% if nav == 'start' %} aria-current="page"{% endif %}>Start here</a></li>
+        {% endif %}
         {% if user.is_authenticated %}
           <li><a class="nav__link" href="{% url 'accounts:dashboard' %}"{% if nav == 'account' %} aria-current="page"{% endif %}>Your account</a></li>
         {% else %}
           <li><a class="nav__link" href="{% url 'accounts:login' %}"{% if nav == 'account' %} aria-current="page"{% endif %}>Sign in</a></li>
         {% endif %}
-        <li><a class="nav__link nav__link--cta" href="{% url 'content:join' %}"{% if nav == 'join' %} aria-current="page"{% endif %}>Join</a></li>
+        {% if not viewer_member %}
+          <li><a class="nav__link nav__link--cta" href="{% url 'content:join' %}"{% if nav == 'join' %} aria-current="page"{% endif %}>Join</a></li>
+        {% endif %}
       </ul>
     </nav>
   </div>
 </header>
 
 <main id="main">
+{% if messages %}
+  <div class="wrap flash" role="status" aria-live="polite">
+    {% for message in messages %}
+      <p class="flash__item flash__item--{{ message.tags|default:'info' }}">{{ message }}</p>
+    {% endfor %}
+  </div>
+{% endif %}
 {% block content %}{% endblock %}
 </main>
 
@@ -91,7 +107,8 @@
           <ul class="footer__list">
             {% for link in chat_links %}
               <li>
-                {% if link.url %}<a href="{{ link.url }}" rel="noopener">{{ link.name }}</a>
+                {% if link.state == "live" %}<a href="{{ link.url }}" rel="noopener">{{ link.name }}</a>
+                {% elif link.state == "members" %}<span>{{ link.name }}</span> <a class="footer__soon" href="{% if user.is_authenticated %}{% url 'accounts:dashboard' %}{% else %}{% url 'accounts:login' %}{% endif %}" title="The invite link is on your account page once you are a member">Members</a>
                 {% else %}<span>{{ link.name }}</span> <span class="footer__soon">Soon</span>{% endif %}
                 {% if link.handle %}<span class="footer__handle">{{ link.handle }}</span>{% endif %}
               </li>
@@ -104,7 +121,8 @@
           <ul class="footer__list">
             {% for link in social_links %}
               <li>
-                {% if link.url %}<a href="{{ link.url }}" rel="me noopener">{{ link.name }}</a>
+                {% if link.state == "live" %}<a href="{{ link.url }}" rel="me noopener">{{ link.name }}</a>
+                {% elif link.state == "members" %}<span>{{ link.name }}</span> <span class="footer__soon">Members</span>
                 {% else %}<span>{{ link.name }}</span> <span class="footer__soon">Soon</span>{% endif %}
                 {% if link.handle %}<span class="footer__handle">{{ link.handle }}</span>{% endif %}
               </li>
@@ -119,6 +137,8 @@
           <li><a href="{% url 'content:home' %}">Home</a></li>
           <li><a href="{% url 'content:about' %}">About</a></li>
           <li><a href="{% url 'content:activities' %}">Activities</a></li>
+          <li><a href="{% url 'events:list' %}">Events</a></li>
+          {% if viewer_can_see_members %}<li><a href="{% url 'members:directory' %}">Members</a></li>{% endif %}
           <li><a href="{% url 'content:join' %}">Join or contact</a></li>
           <li><a href="{% url 'content:contents' %}">Everything on this site</a></li>
         </ul>

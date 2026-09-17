@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="section">
+    <div class="wrap wrap--narrow">
+      <p class="caption">
+        <a href="{% url 'events:list' %}">Events</a>{% if event.activity %} &middot; <a href="{{ event.activity.get_absolute_url }}">{{ event.activity.name }}</a>{% endif %}
+      </p>
+      <h1 class="page-head__title mt-4">{{ event.title }}</h1>
+      <p class="mt-4">
+        {% if event.status == "draft" %}<span class="pill pill--draft">Draft — only the leadership team can see this</span>{% endif %}
+        {% if event.is_cancelled %}<span class="pill pill--cancelled">Cancelled</span>{% endif %}
+        {% if event.visibility == "members" %}<span class="pill">Members only</span>{% endif %}
+        {% if has_ended and not event.is_cancelled %}<span class="pill">This has happened</span>{% endif %}
+      </p>
+
+      <p class="lead mt-6">{{ event.summary }}</p>
+
+      <div class="panel mt-7">
+        <dl class="event-facts">
+          <div><dt>When</dt><dd>{{ event.starts_at|date:"l j F Y, H:i" }}–{{ event.ends_at|date:"H:i T" }}</dd></div>
+          {% if event.location %}<div><dt>Where</dt><dd>{{ event.location }}</dd></div>{% endif %}
+          {% if event.is_online %}
+            <div>
+              <dt>Online</dt>
+              <dd>
+                {% if has_place and not has_ended %}<a href="{{ event.online_url }}" rel="noopener noreferrer">Join the call</a>
+                {% else %}The link is shown here to people who have a place.{% endif %}
+              </dd>
+            </div>
+          {% endif %}
+          {% if event.capacity %}
+            <div><dt>Places</dt><dd>{{ event.going_count }} of {{ event.capacity }} taken{% if event.waitlist_count %}, {{ event.waitlist_count }} waiting{% endif %}</dd></div>
+          {% endif %}
+          {% if not has_started and not event.is_cancelled and event.registration_closes_at %}
+            <div><dt>Registration closes</dt><dd>{{ event.registration_closes_at|date:"l j F, H:i T" }}</dd></div>
+          {% endif %}
+        </dl>
+
+        <div class="panel__actions">
+          {% if registration %}
+            {% if registration.status == "going" %}
+              <span class="pill pill--going">You have a place</span>
+            {% else %}
+              <span class="pill pill--waitlist">You are on the waiting list</span>
+            {% endif %}
+            {% if can_cancel %}
+              <form method="post" action="{% url 'events:cancel' event.slug %}">
+                {% csrf_token %}
+                <button class="btn btn--ghost btn--plain" type="submit">{% if registration.status == "going" %}I cannot come{% else %}Leave the waiting list{% endif %}</button>
+              </form>
+            {% endif %}
+          {% elif not block %}
+            <form method="post" action="{% url 'events:register' event.slug %}">
+              {% csrf_token %}
+              <button class="btn" type="submit">{% if event.capacity and not spots_left %}Join the waiting list{% else %}Register{% endif %}</button>
+            </form>
+          {% elif block == "sign-in" %}
+            <a class="btn" href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">Sign in to register</a>
+            <a class="btn btn--ghost btn--plain" href="{% url 'content:join' %}">Not a member yet?</a>
+          {% elif block != "started" and block != "cancelled" %}
+            <p class="muted">{{ block_message }}</p>
+          {% endif %}
+          {% if not has_ended %}
+            <a class="btn btn--ghost btn--plain" href="{% url 'events:calendar' event.slug %}">Add to calendar</a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if event.description %}
+        <div class="prose mt-7">{{ event.description|linebreaks }}</div>
+      {% endif %}
+
+      {% if named_attendees or unnamed_attendees %}
+        <h2 class="mt-9">{% if has_ended %}Who came along{% else %}Who is going{% endif %}</h2>
+        {% if named_attendees %}
+          <div class="attendees">
+            {% for person in named_attendees %}
+              <a href="{{ person.get_absolute_url }}"><span class="avatar" aria-hidden="true">{{ person.initials }}</span>{{ person.display_name }}</a>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% if unnamed_attendees %}
+          <p class="muted small mt-4">{% if named_attendees %}And {{ unnamed_attendees }} other{{ unnamed_attendees|pluralize }}.{% else %}{{ unnamed_attendees }} {{ unnamed_attendees|pluralize:"person,people" }}.{% endif %}</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

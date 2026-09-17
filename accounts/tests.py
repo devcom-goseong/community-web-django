@@ -194,25 +194,41 @@ class DashboardTests(TestCase):
         self.member = Member.objects.create(user=self.user, display_name="Sam Park")
         self.client.force_login(self.user)
 
+    def profile_data(self, **overrides):
+        data = {
+            "display_name": "Sam P", "handle": self.member.handle,
+            "profile_visibility": Member.Visibility.HIDDEN,
+            "student": "no", "student_id": "", "interests": ["Programming"], "bio": "Hello.",
+            "github_url": "", "linkedin_url": "",
+            "projects-TOTAL_FORMS": "0", "projects-INITIAL_FORMS": "0",
+            "projects-MIN_NUM_FORMS": "0", "projects-MAX_NUM_FORMS": "8",
+        }
+        data.update(overrides)
+        return data
+
     def test_a_member_can_change_their_own_details(self):
-        response = self.client.post(reverse("accounts:dashboard"), {
-            "display_name": "Sam P", "student": "no", "student_id": "",
-            "interests": ["Programming"], "bio": "Hello.",
-            "github_url": "", "linkedin_url": ""})
-        self.assertRedirects(response, reverse("accounts:dashboard"))
+        response = self.client.post(reverse("accounts:profile_edit"), self.profile_data())
+        self.assertRedirects(response, reverse("accounts:profile_edit"))
         self.member.refresh_from_db()
+        self.user.refresh_from_db()
         self.assertEqual(self.member.display_name, "Sam P")
         self.assertEqual(self.member.interests, ["Programming"])
+        self.assertEqual(self.user.first_name, "Sam P", "the admin's copy of the name follows")
 
     def test_a_member_cannot_set_their_own_membership_status(self):
-        self.client.post(reverse("accounts:dashboard"), {
-            "display_name": "Sam P", "student": "no", "student_id": "",
-            "bio": "", "github_url": "", "linkedin_url": "",
-            "status": Member.Status.ACTIVE})
+        self.client.post(reverse("accounts:profile_edit"),
+                         self.profile_data(status=Member.Status.ACTIVE,
+                                           approved_at="2026-01-01 00:00"))
         self.member.refresh_from_db()
         self.assertEqual(self.member.status, Member.Status.PENDING)
+        self.assertIsNone(self.member.approved_at)
+
+    def test_the_dashboard_does_not_accept_posts(self):
+        self.assertEqual(self.client.post(reverse("accounts:dashboard")).status_code, 405)
 
     def test_the_dashboard_shows_applications_sent_from_the_same_address(self):
+        # Only once the address is confirmed; see ApplicationPrivacyTests.
+        self.member.mark_verified()
         Application.objects.create(name="Sam Park", email="SAM@example.org",
                                    message="Hello", created_at=timezone.now())
         response = self.client.get(reverse("accounts:dashboard"))

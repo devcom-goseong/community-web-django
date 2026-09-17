@@ -1,28 +1,27 @@
-"""The welcome email, and the signed link that verifies an address.
+"""The welcome email with its confirmation link, and the approval email.
 
-The token is a signed value rather than a row in a table: there is nothing to
-expire by hand, nothing to clean up, and a link that has been used once still
-works, which is what someone who clicks twice expects.
+The confirmation token is a signed value rather than a row in a table: there is
+nothing to expire by hand, nothing to clean up, and a link that has been used
+once still works, which is what someone who clicks twice expects.
+
+The approval email deliberately does not contain the community's invite links.
+Emails get forwarded and archived in places the community cannot see; the links
+are on the member's account page, behind sign-in, where they can be changed if
+one ever leaks.
 """
 
 import logging
 
 from django.conf import settings
 from django.core import signing
-from django.core.mail import EmailMultiAlternatives, get_connection
 from django.urls import reverse
-from django.utils.html import escape
+
+from content.emails import build_message, html_layout, send_each
 
 log = logging.getLogger(__name__)
 
 SALT = "accounts.verify-email"
 MAX_AGE_SECONDS = 3 * 24 * 60 * 60  # three days
-
-# The identity, so the email looks like the site it came from.
-NAVY = "#062350"
-MUTED = "#4e617e"
-PAPER = "#f7f3ea"
-RULE = "#d5d6d4"
 
 
 def make_token(user):
@@ -46,71 +45,61 @@ def read_token(token, max_age=MAX_AGE_SECONDS):
     return None
 
 
-def _verify_url(request, user):
-    path = reverse("accounts:verify", args=[make_token(user)])
+def _absolute(request, path):
+    # From a request, the address the person actually used. Without one — an
+    # admin action run in a script, say — this app's own configured address.
+    # Never PUBLIC_SITE_URL: that is the static site, which has no /account/.
     if request is not None:
         return request.build_absolute_uri(path)
-    return settings.PUBLIC_SITE_URL.rstrip("/") + path
+    return f"{settings.APP_URL}{path}"
 
 
 def send_welcome_email(member, request=None):
     """Tell them the account exists and ask them to confirm the address.
 
-    Returns True if it went out. A failure is logged and swallowed: the
-    account has already been created, and the member can ask for another link
-    from their own page, so an SMTP problem must not turn into a 500 on a
-    sign-up that actually worked.
+    Returns True if it went out. A failure is logged and swallowed: the account
+    has already been created, and the member can ask for another link from their
+    own page, so an SMTP problem must not turn into an error on a sign-up that
+    actually worked.
     """
     user = member.user
-    url = _verify_url(request, user)
-    site = settings.PUBLIC_SITE_URL.rstrip("/")
+    url = _absolute(request, reverse("accounts:verify", args=[make_token(user)]))
+    policies = _absolute(request, reverse("content:page", args=["privacy"]))
 
+    lines = [
+        f"Hello {member.display_name}, your account for the {settings.TEAM_NAME} has been "
+        "created.",
+        "Confirm your email address with the button below. The link works for three days; "
+        "if it runs out, sign in and ask for a new one.",
+    ]
     text = (
-        f"Hello {member.display_name},\n\n"
-        "Your account for the KDU Developer Community has been created.\n\n"
-        "Confirm your email address by opening this link:\n\n"
-        f"{url}\n\n"
-        "The link works for three days. If it expires, sign in and ask for a new one.\n\n"
-        "What you agreed to when you signed up:\n"
-        f"  Community rules   {site}/rules.html\n"
-        f"  Terms             {site}/terms.html\n"
-        f"  Privacy notice    {site}/privacy.html\n\n"
+        "\n\n".join(lines)
+        + f"\n\nConfirm your address:\n{url}\n\n"
+        f"The privacy notice explains what the account holds: {policies}\n\n"
         "If you did not create this account, ignore this email and nothing further happens.\n\n"
-        "--\nKDU Developer Community\n"
+        f"--\n{settings.TEAM_NAME}\n"
     )
+    html = html_layout(
+        "Confirm your email address", lines, button=("Confirm my address", url),
+        footnote="If you did not create this account, ignore this email and nothing further "
+                 "happens.",
+    )
+    message = build_message(
+        user.email, f"Confirm your email address — {settings.TEAM_NAME}", text, html)
+    return all(send_each([message], "welcome email"))
 
-    html = f"""<div style="font-family:Georgia,'Times New Roman',serif;color:{NAVY};line-height:1.6;max-width:600px;background:{PAPER};padding:32px">
-  <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{MUTED};margin:0 0 8px">
-    KDU Developer Community
-  </p>
-  <h1 style="font-size:24px;margin:0 0 20px;color:{NAVY}">Confirm your email address</h1>
-  <p style="font-size:16px;margin:0 0 20px">Hello {escape(member.display_name)}, your account has been created.</p>
-  <p style="margin:0 0 28px">
-    <a href="{escape(url)}" style="display:inline-block;background:{NAVY};color:{PAPER};text-decoration:none;padding:14px 26px;font-size:14px;letter-spacing:.08em;text-transform:uppercase">Confirm my address</a>
-  </p>
-  <p style="font-size:14px;color:{MUTED};margin:0 0 20px">
-    The link works for three days. If it expires, sign in and ask for a new one.
-  </p>
-  <p style="font-size:14px;color:{MUTED};border-top:1px solid {RULE};padding-top:16px;margin:0">
-    You agreed to the <a href="{site}/rules.html" style="color:{NAVY}">community rules</a>,
-    the <a href="{site}/terms.html" style="color:{NAVY}">terms</a> and the
-    <a href="{site}/privacy.html" style="color:{NAVY}">privacy notice</a>.
-    If you did not create this account, ignore this email.
-  </p>
-</div>"""
 
-    try:
-        connection = get_connection()
-        message = EmailMultiAlternatives(
-            subject="Confirm your email address — KDU Developer Community",
-            body=text,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[user.email],
-            connection=connection,
-        )
-        message.attach_alternative(html, "text/html")
-        message.send()
-        return True
-    except Exception:
-        log.exception("could not send the welcome email to member %s", member.pk)
-        return False
+def send_approval_email(member, request=None):
+    """Tell a member they have been approved, and where to go next."""
+    account = _absolute(request, reverse("accounts:dashboard"))
+    lines = [
+        f"Hello {member.display_name}, you are now a member of the {settings.TEAM_NAME}.",
+        "Sign in to your account to find the invite links to the community's chats, sign up "
+        "for events, and set up your profile so other members can find you.",
+        "Your profile stays private until you choose otherwise.",
+    ]
+    text = "\n\n".join(lines) + f"\n\nYour account: {account}\n\n--\n{settings.TEAM_NAME}\n"
+    html = html_layout("Welcome in", lines, button=("Go to your account", account))
+    message = build_message(
+        member.user.email, f"You are a member — {settings.TEAM_NAME}", text, html)
+    return all(send_each([message], "approval email"))

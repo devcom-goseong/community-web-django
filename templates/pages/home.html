@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load static %}
+{% extends "base.html" %}{% load static events %}
 
 {% block content %}
   <section class="hero">
@@ -10,9 +10,21 @@
         and any developer who wants in.
       </p>
       <div class="hero__actions">
-        <a class="btn" href="{% url 'content:join' %}">Join the community</a>
-        <a class="btn btn--ghost" href="{% url 'content:about' %}">What we are building</a>
+        {% if viewer_member %}
+          <a class="btn" href="{% url 'events:list' %}">See what is coming up</a>
+          <a class="btn btn--ghost" href="{% url 'accounts:dashboard' %}">Your account</a>
+        {% else %}
+          <a class="btn" href="{% url 'content:join' %}">Join the community</a>
+          <a class="btn btn--ghost" href="{% url 'content:about' %}">What we are building</a>
+        {% endif %}
       </div>
+      {% next_event as upcoming %}
+      {% if upcoming %}
+        <p class="hero__next mt-6">
+          Next up: <a href="{{ upcoming.get_absolute_url }}">{{ upcoming.title }}</a>,
+          {{ upcoming.starts_at|date:"l j M, H:i T" }}
+        </p>
+      {% endif %}
     </div>
 
     <picture>

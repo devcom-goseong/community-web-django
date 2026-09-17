@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Page not found — {{ site.community_name }}{% endblock %}
+
+{% block content %}
+  <section class="section">
+    <div class="wrap wrap--narrow">
+      <h1 class="page-head__title">That page is not here</h1>
+      <p class="lead mt-5">It may have moved, or the address may have a typo in it.</p>
+      <div class="panel__actions mt-7">
+        <a class="btn" href="{% url 'content:home' %}">Home</a>
+        <a class="btn btn--ghost btn--plain" href="{% url 'events:list' %}">Events</a>
+        <a class="btn btn--ghost btn--plain" href="{% url 'content:contents' %}">Everything on the site</a>
+      </div>
+    </div>
+  </section>
+{% endblock %}

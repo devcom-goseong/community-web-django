@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "content",
     "applications",
     "accounts",
+    "events",
 ]
 
 MIDDLEWARE = [
@@ -92,6 +93,11 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # The site settings and the platform links, on every page. A
+                # context processor rather than something each view passes, so
+                # the rule that invite links are for members cannot be forgotten
+                # by a view written later.
+                "content.context_processors.site",
             ],
         },
     },
@@ -165,6 +171,10 @@ STORAGES = {
 # collectstatic as its own step, so the manifest path is verified separately.
 if "test" in sys.argv:
     STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
+    # The real hasher is deliberately slow, which is the point in production
+    # and a two-minute wait in a test suite that creates hundreds of accounts.
+    # Tests only: nothing outside `manage.py test` ever uses this.
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -202,6 +212,14 @@ DEFAULT_FROM_EMAIL = f"{TEAM_NAME} <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else 
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 PUBLIC_SITE_URL = env("PUBLIC_SITE_URL", "https://dev-comm.netlify.app")
 
+# The address this app itself is served on, with scheme and no trailing slash.
+# Links in emails sent from a web request are built from that request; this is
+# for the ones that have no request to build from, like the event reminders a
+# scheduled job sends. It is not PUBLIC_SITE_URL: that is the static site, which
+# does not serve /account/ or /events/ at all. A deploy check warns if it is
+# still pointing at localhost when DEBUG is off.
+APP_URL = env("APP_URL", "http://localhost:8000").rstrip("/")
+
 # Where the join form posts. Same-origin here, so the front-end script needs no
 # change whether the pages are served by Django or by the static site.
 FORM_ENDPOINT = env("FORM_ENDPOINT", "/api/register")
@@ -211,6 +229,11 @@ MIN_FILL_SECONDS = float(env("MIN_FILL_SECONDS", "1.5"))
 MAX_FILL_SECONDS = float(env("MAX_FILL_SECONDS", str(12 * 60 * 60)))
 RATE_LIMIT_MAX = int(env("RATE_LIMIT_MAX", "5"))
 RATE_LIMIT_WINDOW_SECONDS = int(env("RATE_LIMIT_WINDOW_SECONDS", "600"))
+
+# --- Events ---------------------------------------------------------------
+# How far ahead of an event the reminder goes out. The reminder job runs once
+# an hour, so a reminder arrives within an hour of this mark.
+EVENT_REMINDER_HOURS = int(env("EVENT_REMINDER_HOURS", "24"))
 
 LOGGING = {
     "version": 1,

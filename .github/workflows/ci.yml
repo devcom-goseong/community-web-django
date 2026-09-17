@@ -44,6 +44,9 @@ jobs:
       DJANGO_LOCMEM_CACHE: "1"
       DATABASE_URL: postgres://kdu:kdu@localhost:5432/kdu_test
       DJANGO_EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+      # A real-looking address, so the deploy check that catches a localhost
+      # APP_URL passes here and still fails a production misconfiguration.
+      APP_URL: https://community.example.org
 
     steps:
       - uses: actions/checkout@v4

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="section">
+    <div class="wrap wrap--narrow">
+      <div class="profile-head">
+        <span class="avatar avatar--lg" aria-hidden="true">{{ member.initials }}</span>
+        <div>
+          <h1 class="page-head__title">{{ member.display_name }}</h1>
+          <p class="profile-head__handle">@{{ member.handle }}{% if member.approved_at and member.is_active_member %} &middot; Member since {{ member.approved_at|date:"F Y" }}{% endif %}</p>
+        </div>
+      </div>
+
+      {% if is_owner %}
+        <p class="visibility-note">
+          {% if member.profile_visibility == "hidden" %}Only you and the leadership team can see this page.
+          {% elif member.profile_visibility == "members" %}Members of the community can see this page.
+          {% else %}Anyone with the link can see this page.{% endif %}
+          <a href="{% url 'accounts:profile_edit' %}">Change</a>
+        </p>
+        {% if not member.is_active_member and member.profile_visibility != "hidden" %}
+          <p class="visibility-note">Nobody else can see it until your membership is approved.</p>
+        {% endif %}
+      {% endif %}
+
+      {% if member.bio %}<p class="lead mt-6">{{ member.bio|linebreaksbr }}</p>{% endif %}
+
+      {% if member.interests %}
+        <div class="tag-list mt-5">{% for name in member.interests %}<span class="tag">{{ name }}</span>{% endfor %}</div>
+      {% endif %}
+
+      {% if member.github_url or member.linkedin_url %}
+        <div class="link-row">
+          {% if member.github_url %}<a class="btn btn--ghost btn--plain" href="{{ member.github_url }}" rel="nofollow ugc noopener noreferrer">GitHub</a>{% endif %}
+          {% if member.linkedin_url %}<a class="btn btn--ghost btn--plain" href="{{ member.linkedin_url }}" rel="nofollow ugc noopener noreferrer">LinkedIn</a>{% endif %}
+        </div>
+      {% endif %}
+
+      {% if projects %}
+        <h2 class="mt-9">Things {% if is_owner %}you have{% else %}they have{% endif %} made</h2>
+        <ul class="item-list">
+          {% for project in projects %}
+            <li>
+              {% if project.url %}<a href="{{ project.url }}" rel="nofollow ugc noopener noreferrer">{{ project.title }}</a>{% else %}<strong>{{ project.title }}</strong>{% endif %}
+              {% if project.description %}<p class="item-list__meta">{{ project.description }}</p>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if attended %}
+        <h2 class="mt-9">In the community</h2>
+        <ul class="item-list">
+          {% for registration in attended %}
+            <li>
+              {{ registration.get_role_display }}: {{ registration.event.title }}
+              <p class="item-list__meta">
+                {{ registration.event.starts_at|date:"j F Y" }}{% if registration.event.activity %} &middot; {{ registration.event.activity.name }}{% endif %}
+              </p>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if not member.bio and not member.interests and not projects and not attended %}
+        <p class="muted mt-7">
+          {% if is_owner %}Your profile is empty so far. <a href="{% url 'accounts:profile_edit' %}">Add something about yourself</a>.{% else %}Nothing here yet.{% endif %}
+        </p>
+      {% endif %}
+
+      {% if not is_owner %}
+        <p class="small muted mt-9">
+          Something on this profile that breaks the <a href="{% url 'content:page' 'rules' %}">community rules</a>?
+          <a href="{% url 'content:join' %}">Tell the leadership team</a> and mention @{{ member.handle }}.
+        </p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

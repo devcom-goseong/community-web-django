@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load events %}
 
 {% block content %}
   {% include "partials/page_head.html" with eyebrow="Activities" heading=activity.name lead=activity.summary %}
@@ -12,6 +12,15 @@
         <nav class="doc__toc mt-5" aria-label="Other activities">
           {% for other in others %}<a href="{{ other.get_absolute_url }}">{{ other.name }}</a>{% endfor %}
         </nav>
+        {% upcoming_events_for activity as coming %}
+        {% if coming %}
+          <p class="footer__heading mt-7">Coming up</p>
+          <ul class="item-list">
+            {% for event in coming %}
+              <li><a href="{{ event.get_absolute_url }}">{{ event.title }}</a><p class="item-list__meta">{{ event.starts_at|date:"D j M, H:i T" }}</p></li>
+            {% endfor %}
+          </ul>
+        {% endif %}
         <p class="mt-7"><a class="link-arrow" href="{% url 'content:activities' %}">All activities</a></p>
       </div>
 

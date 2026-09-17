@@ -9,8 +9,9 @@ PAGES = [
         "slug": "rules", "title": "Community rules", "order": 0,
         "eyebrow": "Rules · Read before applying",
         "lead": "The rules every member of the KDU Developer Community agrees to: behaviour, "
-                "taking part, crediting work, use of the platforms, and how breaches are handled.",
-        "show_version": True, "version": "Version 2", "reviewed_on": date(2026, 9, 4),
+                "taking part, crediting work, use of the platforms and the members directory, "
+                "and how breaches are handled.",
+        "show_version": True, "version": "Version 2", "reviewed_on": date(2026, 9, 17),
         "notice_title": "Working version",
         "notice_body": "This is the current version. The leadership team will confirm the final "
                        "wording before the community opens to a wider group. If something reads "
@@ -26,6 +27,7 @@ PAGES = [
              "Keep communication professional and appropriate."),
             ("taking-part", "2. Taking part", "",
              "Respect meetings and activities. Turn up when you said you would, and say early when you cannot.\n"
+             "If you register for an event and cannot come, cancel it, so the place goes to the next person waiting.\n"
              "Do not spam the channels.\n"
              "Keep discussion relevant to the channel it is in.\n"
              "Ask questions freely. Nobody here is judged for not knowing something."),
@@ -38,13 +40,19 @@ PAGES = [
              "Use each channel for what it is for.\n"
              "Keep announcements, discussion, project work and casual conversation separate.\n"
              "Post appropriate content only.\n"
-             "What a member shares inside the community stays inside it, unless they say otherwise."),
-            ("leadership", "5. Leadership and decisions", "",
+             "What a member shares inside the community stays inside it, unless they say otherwise.\n"
+             "Invite links to the community's chats are for members. Do not pass them on outside the community."),
+            ("directory", "5. The members directory and profiles", "",
+             "Nobody is listed unless they choose to be, and what a profile shows is up to its owner.\n"
+             "Use the directory to find people to learn and build with — not to recruit, sell, or collect contact details.\n"
+             "Do not copy the directory, or share another member's details outside the community, without their permission.\n"
+             "Keep your own profile honest and appropriate, links included. The leadership team can hide a profile that breaks these rules."),
+            ("leadership", "6. Leadership and decisions", "",
              "The leadership team is responsible for the rules, the platforms, the activities and the organisation.\n"
              "Decisions are made by the leadership team, and explained when a member asks.\n"
              "Any member can propose an improvement, and proposals are answered either way.\n"
              "Bring problems to the leadership team early rather than letting them grow."),
-            ("breaches", "6. If a rule is broken",
+            ("breaches", "7. If a rule is broken",
              "Most problems are misunderstandings, so the first step is always a conversation. "
              "Beyond that:",
              "A private conversation with someone on the leadership team.\n"
@@ -52,7 +60,7 @@ PAGES = [
              "Removal from the community for serious or repeated breaches.\n"
              "Harassment, discrimination, or passing off work that is not yours can mean removal "
              "without the earlier steps."),
-            ("changes", "7. Changes to these rules",
+            ("changes", "8. Changes to these rules",
              "These are not permanent. As the community grows the leadership team will review them "
              "and improve them where necessary. Members can propose changes at any time, and "
              "anything material will be announced on the community platform before it takes effect.",
@@ -113,9 +121,9 @@ PAGES = [
     {
         "slug": "privacy", "title": "Privacy notice", "order": 2,
         "eyebrow": "Privacy · Plainly put",
-        "lead": "What the KDU Developer Community collects when you use the form or create an "
-                "account, what happens to it, who can see it, and how to have it deleted.",
-        "show_version": True, "version": "Version 1", "reviewed_on": date(2026, 8, 29),
+        "lead": "What the KDU Developer Community collects when you use the form, create an "
+                "account or sign up for an event, who can see it, and how to have it deleted.",
+        "show_version": True, "version": "Version 2", "reviewed_on": date(2026, 9, 17),
         "intro": "This covers this website, the form on it, and member accounts. It is written "
                  "to be read rather than to protect us. If anything here is unclear, ask, "
                  "and we will fix the wording.",
@@ -130,55 +138,88 @@ PAGES = [
             ("account", "2. If you create an account",
              "An account is optional. You can send the form, apply, and get a reply without "
              "one.\n\n"
-             "If you do create one, we additionally hold your password and whether you have "
-             "confirmed your email address. The password itself is not stored: what we keep "
-             "is a salted hash of it, which cannot be turned back into the password, so "
-             "nobody here can read it or tell you what it is. Everything else on your "
-             "account — your introduction, your interests, your links — is there because you "
-             "typed it, and you can change or empty it yourself at any time.",
+             "If you do create one, we additionally hold your password, whether you have "
+             "confirmed your email address, and when you were approved as a member. The "
+             "password itself is not stored: what we keep is a salted hash of it, which cannot "
+             "be turned back into the password, so nobody here can read it or tell you what it "
+             "is. Everything else on your account — your profile address, your introduction, "
+             "your interests, your links, the projects you list — is there because you typed "
+             "it, and you can change or remove it yourself at any time.",
              ""),
-            ("use", "3. What happens to it",
+            ("profile", "3. Your profile and the members directory",
+             "Your profile is hidden until you choose otherwise. There are three settings. "
+             "'Only me' means nobody but you and the leadership team can see it — the "
+             "leadership team can see every profile, so they can look after the community. "
+             "'Members' lists you in the members directory and shows your profile to approved "
+             "members who are signed in. 'Anyone with the link' also lets people outside the "
+             "community open your profile, so you can put it on a CV.\n\n"
+             "A profile shows your name, your profile address, your introduction, your "
+             "interests, your GitHub and LinkedIn links, the projects you add, and the events "
+             "you took part in. It never shows your email address, your student ID, or whether "
+             "you are a student. Profile pages ask search engines not to index them, whatever "
+             "the setting.",
+             ""),
+            ("events", "4. Events",
+             "When you register for an event we record that you registered, and whether you "
+             "have a place or are on the waiting list. After the event, the leadership team "
+             "records whether you attended and any part you played, such as presenting. They "
+             "use this to plan rooms and numbers.\n\n"
+             "Signed-in members can see the names of people going to an event, but only people "
+             "whose profile is visible to members; everyone else is counted without a name. "
+             "Events you attended appear on your profile only if your profile is visible.\n\n"
+             "About an event you registered for, we email you a confirmation, a reminder the "
+             "day before, and a message if a place opens up for you or the event is cancelled. "
+             "If the event is online, the video call link is only ever shown to people who "
+             "have a place.",
+             ""),
+            ("use", "5. What happens to it",
              "Your submission is sent to the community's own server, where it is stored so the "
              "leadership team can review it, and turned into two emails: a confirmation to you, so "
              "you know it arrived, and a notification to the community inbox.\n\n"
              "The server is run by the community and is not shared with anyone else.",
              ""),
-            ("who", "4. Who can see it",
-             "The members of the leadership team who have access to the community inbox and the "
-             "review screen. Nobody outside the community.",
+            ("who", "6. Who can see it",
+             "Your application, your account details and your event registrations: the members "
+             "of the leadership team who look after the community. Your profile, and the events "
+             "on it: whoever your profile setting allows, as described above. Nothing about you "
+             "is shown to other members or to the public unless you choose it.",
              ""),
-            ("automatic", "5. What happens automatically", "",
+            ("automatic", "7. What happens automatically", "",
              "Your IP address is used briefly, and only in memory, to stop one source flooding the "
              "form. It is not stored and it is not put in either email.\n"
              "Our hosts keep standard server logs, as every web host does.\n"
              "The emails are sent through Gmail, so Google handles them as it handles any email.\n"
              "The typeface loads from Google Fonts, so Google receives your IP address and browser "
              "details when a page opens."),
-            ("cookies", "6. Cookies", "",
+            ("cookies", "8. Cookies", "",
              "Reading this site sets no cookies at all.\n"
              "Signing in sets two: one that keeps you signed in, and one that stops a form "
              "being submitted from another site. Both are strictly necessary for an account "
              "to work, neither follows you anywhere, and signing out clears the first.\n"
              "There are no analytics, advertising or third-party cookies, which is why there "
              "is no consent banner to click."),
-            ("dont", "7. What we do not do", "",
+            ("dont", "9. What we do not do", "",
              "No analytics, and no tracking of any kind.\n"
              "No advertising, and no marketing lists.\n"
              "No email from us except the ones you cause: a reply, a confirmation, a link to "
-             "confirm your address, or a link to reset your password.\n"
-             "Your details are never sold, shared, or passed to anyone outside the leadership team."),
-            ("keep", "8. How long we keep it",
+             "confirm your address or reset your password, the message saying you are "
+             "approved, and the emails about events you registered for.\n"
+             "Your details are never sold, and nothing about you is shown to other members or "
+             "the public unless you choose it."),
+            ("keep", "10. How long we keep it",
              "Your application stays on file for as long as you are a member. If we cannot "
              "accept your application we delete it once we have told you. An account stays "
-             "until you ask us to close it, and closing it deletes the account and everything "
-             "on it. If you ask us to delete anything at any point, we delete it.",
+             "until you close it, and closing it deletes the account and everything on it — "
+             "your profile, your projects and your event history — straight away. If you ask us "
+             "to delete anything at any point, we delete it.",
              ""),
-            ("rights", "9. Asking for your data",
-             "You can ask for a copy of what we hold about you, ask us to correct it, or ask us to "
-             "delete it. Reply to the confirmation email you received, or use the form and say what "
-             "you want. We will do it and tell you when it is done.",
+            ("rights", "11. Asking for your data",
+             "You can close your account yourself, from your account page. You can also ask for "
+             "a copy of what we hold about you, ask us to correct it, or ask us to delete it. "
+             "Reply to the confirmation email you received, or use the form and say what you "
+             "want. We will do it and tell you when it is done.",
              ""),
-            ("changes", "10. Changes",
+            ("changes", "12. Changes",
              "If this notice changes we update the date at the top of this page, and announce "
              "anything material on the community platform.",
              ""),

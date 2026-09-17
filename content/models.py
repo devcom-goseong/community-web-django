@@ -15,6 +15,12 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 
+# Top-level addresses that belong to something other than a prose page.
+RESERVED_PAGE_SLUGS = frozenset({
+    "about", "account", "activities", "admin", "api", "contents", "events", "healthz",
+    "interests", "join", "members", "questions", "resources", "robots.txt", "static",
+})
+
 
 class Published(models.QuerySet):
     def live(self):
@@ -119,6 +125,19 @@ class SocialLink(ContentBase):
         help_text="Leave blank to list the platform with a 'Soon' badge instead of a link.",
     )
     group = models.CharField(max_length=10, choices=GROUP_CHOICES, default=GROUP_SOCIAL)
+    # On by default, on purpose. A leader adding a new chat platform who forgets
+    # this box should end up with a link only members can see, not an invite
+    # link printed on every public page. A public "follow us" link that is
+    # accidentally members-only is a small annoyance; the other way round lets
+    # strangers and spammers straight into the group chats.
+    members_only = models.BooleanField(
+        default=True,
+        help_text="Only show the address to approved members who are signed in. Everyone else "
+                  "sees the platform's name with a 'Members' badge. Use this for invite links "
+                  "to Discord, WhatsApp and similar; untick it for public pages people can "
+                  "follow. If an invite link is ever shared outside the community, make a new "
+                  "one on the platform, revoke the old one there, and paste the new one here.",
+    )
     handle = models.CharField(
         max_length=80,
         blank=True,
@@ -174,6 +193,16 @@ class Page(ContentBase):
 
     def get_absolute_url(self):
         return reverse("content:page", args=[self.slug])
+
+    def clean(self):
+        # Pages are served by a catch-all route that comes last, so a page
+        # whose slug matches a real section of the site could be saved but
+        # never reached. Better to say so at the moment it is typed.
+        if self.slug in RESERVED_PAGE_SLUGS:
+            raise ValidationError({
+                "slug": f"'{self.slug}' is already a section of the site, so a page with "
+                        f"this address would never be shown. Choose another."
+            })
 
 
 class PageSection(models.Model):

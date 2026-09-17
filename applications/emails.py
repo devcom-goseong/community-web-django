@@ -58,13 +58,13 @@ def _notification(application, admin_url):
         f"{escape(str(value))}</td></tr>"
         for label, value in rows
     )
-    html = f"""<div style="font-family:Georgia,'Times New Roman',serif;color:{INK};line-height:1.6;max-width:640px">
-  <p style="font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{MUTED};margin:0 0 8px">
+    html = f"""<div style="font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:{INK};line-height:1.6;max-width:640px">
+  <p style="font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:{MUTED};margin:0 0 8px">
     {"New question" if application.is_question else "New membership application"}
   </p>
   <h1 style="font-size:22px;margin:0 0 20px;color:{NAVY}">{escape(application.name)}</h1>
   <table style="border-collapse:collapse;width:100%;font-size:14px">{row_html}</table>
-  <p style="font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{MUTED};margin:24px 0 8px">Message</p>
+  <p style="font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:{MUTED};margin:24px 0 8px">Message</p>
   <div style="white-space:pre-wrap;border-left:2px solid {NAVY};padding:4px 0 4px 16px;font-size:15px">{escape(application.message or "(no message)")}</div>
   <p style="font-size:13px;color:{MUTED};margin-top:28px;border-top:1px solid {RULE};padding-top:12px">
     <a href="{admin_url}">Review it in the admin</a> — or reply to this email to answer them directly.
@@ -113,11 +113,11 @@ Kyungdong University, South Korea
 We keep your details so the leadership team can review your application, and we
 do not share them outside that team. Ask us to delete them and we will."""
 
-    html = f"""<div style="font-family:Georgia,'Times New Roman',serif;color:{INK};line-height:1.65;max-width:600px">
-  <p style="font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{MUTED};margin:0 0 8px">{escape(settings.TEAM_NAME)}</p>
+    html = f"""<div style="font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:{INK};line-height:1.65;max-width:600px">
+  <p style="font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:{MUTED};margin:0 0 8px">{escape(settings.TEAM_NAME)}</p>
   <h1 style="font-size:24px;margin:0 0 20px;color:{NAVY}">Thanks, {escape(first_name)} — we have it.</h1>
   <p style="margin:0 0 16px">Someone on the leadership team will read what you wrote and get back to you.</p>
-  <p style="font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{MUTED};margin:28px 0 8px">What you sent us</p>
+  <p style="font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:{MUTED};margin:28px 0 8px">What you sent us</p>
   <div style="white-space:pre-wrap;border-left:2px solid {NAVY};padding:4px 0 4px 16px;font-size:14px">{escape(summary)}</div>
   {f'<div style="white-space:pre-wrap;border-left:2px solid {RULE};padding:4px 0 4px 16px;margin-top:16px;font-size:14px;color:{MUTED}">{escape(application.message)}</div>' if application.message else ""}
   <p style="margin:24px 0 0">You agreed to the <a href="{site}/rules.html">community rules</a>,

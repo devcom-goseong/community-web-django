@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/form.css' %}">{% endblock %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Your account" heading="Close your account" lead="This cannot be undone." %}
+
+  <section class="section section--flush-top">
+    <div class="wrap wrap--narrow">
+      <div class="panel">
+        <h2 class="panel__title">What happens</h2>
+        <ul class="ticks mt-4">
+          <li>Your account, your profile and the projects on it are deleted straight away.</li>
+          <li>Your event history is deleted with them.</li>
+          <li>Any place you hold at an upcoming event is given to the next person on the waiting list.</li>
+          <li>You can join again later with the same email address, starting from scratch.</li>
+        </ul>
+      </div>
+
+      <form class="form panel danger-zone" method="post" novalidate>
+        {% csrf_token %}
+        <div class="fields">
+          {% include "accounts/_field.html" with field=form.password %}
+          {% include "accounts/_field.html" with field=form.delete_applications %}
+        </div>
+        <div class="form__actions">
+          <button class="btn btn--danger btn--plain" type="submit">Close my account</button>
+          <a class="btn btn--ghost btn--plain" href="{% url 'accounts:dashboard' %}">Keep it</a>
+        </div>
+      </form>
+    </div>
+  </section>
+{% endblock %}

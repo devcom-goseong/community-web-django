@@ -42,6 +42,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-kdu}:${POSTGRES_PASSWORD:-kdu-dev-password}@db:5432/${POSTGRES_DB:-kdu}
       PUBLIC_SITE_ORIGINS: ${PUBLIC_SITE_ORIGINS:-http://localhost:3000,https://dev-comm.netlify.app}
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://dev-comm.netlify.app}
+      APP_URL: ${APP_URL:-http://localhost:8000}
       GMAIL_USER: ${GMAIL_USER:-}
       GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
       TEAM_INBOX: ${TEAM_INBOX:-}
