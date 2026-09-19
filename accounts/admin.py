@@ -12,8 +12,10 @@ the edit page both go through it; the inline on the user page shows the status
 but does not let it be changed there.
 """
 
+from django import forms
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.models import User
 from django.utils.html import format_html
 
@@ -46,7 +48,27 @@ class MemberInline(admin.StackedInline):
     )
 
 
+class UserAdminForm(UserChangeForm):
+    """Refuse an email address a different account already uses.
+
+    The database enforces this too, with a case-insensitive unique index, but a
+    form error names the problem here instead of letting the save fail with a
+    500. The rule matches the sign-up form: addresses are compared case-insens-
+    itively, and a blank one is allowed (an account may have none).
+    """
+
+    def clean_email(self):
+        email = (self.cleaned_data.get("email") or "").strip()
+        if email:
+            clash = User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk)
+            if clash.exists():
+                raise forms.ValidationError(
+                    "Another account already uses this email address.")
+        return email
+
+
 class UserAdmin(BaseUserAdmin):
+    form = UserAdminForm
     inlines = (MemberInline,)
     list_display = ("email", "first_name", "member_status", "is_staff", "date_joined")
     list_filter = ("is_staff", "is_superuser", "is_active", "member__status")
