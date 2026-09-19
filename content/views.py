@@ -66,8 +66,8 @@ def activities(request):
     context = base_context(
         request,
         "Activities",
-        "Weekly community meetings, member-run study groups, idea submissions, project teams, "
-        "hackathons, demo days and monthly in-person meetups.",
+        "Weekly community meetings on Python, web development and AI, member-run study groups, "
+        "idea submissions, project teams, hackathons, demo days and monthly in-person meetups.",
         nav="activities",
     )
     context["activities"] = Activity.objects.live().prefetch_related("sections")
