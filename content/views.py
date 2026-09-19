@@ -31,9 +31,9 @@ def home(request):
     context = base_context(
         request,
         "Building things together at Kyungdong University",
-        "A developer community based at Kyungdong University, South Korea, open to students "
-        "there and to any other developer. Weekly meetings, study groups, projects, hackathons "
-        "and demo days, at every skill level.",
+        "The coding and programming club at Kyungdong University, South Korea — a developer "
+        "community open to students there and to any other developer. Weekly meetings, study "
+        "groups, projects, hackathons and demo days, at every skill level.",
         nav="home",
     )
     context.update({
@@ -49,8 +49,8 @@ def about(request):
     context = base_context(
         request,
         "About",
-        "How the community started, what it is for, the values it holds members to, how the "
-        "work is divided, and how to become a member.",
+        "How this coding and programming club at Kyungdong University started, what it is for, "
+        "the values it holds members to, how the work is divided, and how to become a member.",
         nav="about",
     )
     context.update({
