@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
     "corsheaders",
     "content",
     "applications",
@@ -98,6 +99,10 @@ TEMPLATES = [
                 # the rule that invite links are for members cannot be forgotten
                 # by a view written later.
                 "content.context_processors.site",
+                # Search-engine metadata (verification token + JSON-LD). Kept
+                # apart from `site` so its per-request JSON building is easy to
+                # skip for the admin.
+                "content.context_processors.seo",
             ],
         },
     },
@@ -219,6 +224,11 @@ PUBLIC_SITE_URL = env("PUBLIC_SITE_URL", "https://dev-comm.netlify.app")
 # does not serve /account/ or /events/ at all. A deploy check warns if it is
 # still pointing at localhost when DEBUG is off.
 APP_URL = env("APP_URL", "http://localhost:8000").rstrip("/")
+
+# The token Google Search Console gives for "HTML tag" verification. Set it in
+# the environment and it appears as a <meta> tag in the site head; left empty,
+# no tag is rendered. Verification by DNS or file does not need this.
+GOOGLE_SITE_VERIFICATION = env("GOOGLE_SITE_VERIFICATION", "")
 
 # Where the join form posts. Same-origin here, so the front-end script needs no
 # change whether the pages are served by Django or by the static site.

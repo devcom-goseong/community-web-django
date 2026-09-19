@@ -166,5 +166,6 @@ def robots(request):
         "Disallow: /account/",
         "Disallow: /members/",
         "",
+        f"Sitemap: {request.build_absolute_uri('/sitemap.xml')}",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")

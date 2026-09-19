@@ -11,6 +11,7 @@ and never uses any of this, so it should not pay for the queries.
 
 from dataclasses import dataclass
 
+from django.conf import settings
 from django.utils.functional import SimpleLazyObject
 
 from accounts.access import access_state, can_see_members_area, member_of
@@ -55,4 +56,24 @@ def site(request):
         "viewer_member": SimpleLazyObject(lambda: member_of(user)),
         "viewer_can_see_members": SimpleLazyObject(lambda: can_see_members_area(user)),
         "viewer_state": SimpleLazyObject(lambda: access_state(user)),
+    }
+
+
+def seo(request):
+    """Search-engine metadata: the verification token and the site JSON-LD.
+
+    The admin and the form API render nothing of this, so they are not made to
+    build the JSON. Only public social links become `sameAs`; a members-only
+    invite address is never among them. `site_ld` returns an already-safe
+    string, so the template prints it without escaping the JSON.
+    """
+    verification = settings.GOOGLE_SITE_VERIFICATION
+    if request.path.startswith(("/admin/", "/api/")):
+        return {"google_site_verification": verification, "structured_data": ""}
+    from . import seo as seo_data  # local import keeps app loading cycle-free
+    same_as = list(SocialLink.objects.live().filter(members_only=False)
+                   .exclude(url="").values_list("url", flat=True))
+    return {
+        "google_site_verification": verification,
+        "structured_data": seo_data.site_ld(request, SiteSettings.get(), same_as),
     }

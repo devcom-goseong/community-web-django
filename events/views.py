@@ -10,6 +10,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from accounts.access import access_state, can_see_members_area, member_of
 from config.ratelimit import rate_limited
+from content.seo import event_ld
 from content.views import base_context
 
 from . import services
@@ -99,6 +100,8 @@ def event_detail(request, slug):
         "has_started": event.has_started(now),
         "has_ended": event.has_ended(now),
         "can_cancel": bool(registration and not event.has_started(now)),
+        # Rich-result data for a public event; empty for members-only or drafts.
+        "event_ld": event_ld(request, event),
     })
     response = render(request, "events/detail.html", context)
     if event.visibility == Event.Visibility.MEMBERS or registration:

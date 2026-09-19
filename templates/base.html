@@ -7,6 +7,7 @@
 <title>{% block title %}{{ page_title }} — {{ site.community_name }}{% endblock %}</title>
 <meta name="description" content="{{ page_description }}">
 {% if noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
+{% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
 <link rel="canonical" href="{{ request.build_absolute_uri }}">
 
 <meta property="og:type" content="website">
@@ -29,6 +30,9 @@
 <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/favicon/favicon-16.png' %}">
 <link rel="apple-touch-icon" href="{% static 'assets/favicon/apple-touch-icon.png' %}">
 <meta name="theme-color" content="#123a6b">
+
+{% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}
+{% block structured_data %}{% endblock %}
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

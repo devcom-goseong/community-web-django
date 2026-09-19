@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block structured_data %}{% if event_ld %}<script type="application/ld+json">{{ event_ld }}</script>{% endif %}{% endblock %}
+
 {% block content %}
   <section class="section">
     <div class="wrap wrap--narrow">
