@@ -19,6 +19,8 @@ import time
 
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
+from django.templatetags.static import static
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import escape
 from django.views.decorators.csrf import csrf_exempt
@@ -69,7 +71,8 @@ def _parse(request):
 
 
 def _html(status, heading, message):
-    site = settings.PUBLIC_SITE_URL
+    # Same-origin, app-served page: the styles and the home link are this app's
+    # own, not the old static build's.
     body = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,9 +80,9 @@ def _html(status, heading, message):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape(heading)} &mdash; {escape(settings.TEAM_NAME)}</title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="{site}/css/variables.css">
-<link rel="stylesheet" href="{site}/css/base.css">
-<link rel="stylesheet" href="{site}/css/components.css">
+<link rel="stylesheet" href="{static('css/variables.css')}">
+<link rel="stylesheet" href="{static('css/base.css')}">
+<link rel="stylesheet" href="{static('css/components.css')}">
 </head>
 <body>
 <main id="main" class="section">
@@ -87,7 +90,7 @@ def _html(status, heading, message):
     <p class="caption">{escape(settings.TEAM_NAME)}</p>
     <h1 class="page-head__title">{escape(heading)}</h1>
     <p class="page-head__lead">{escape(message)}</p>
-    <p class="mt-8"><a class="btn" href="{site}/index.html">Back to the site</a></p>
+    <p class="mt-8"><a class="btn" href="/">Back to the site</a></p>
   </div>
 </main>
 </body>
@@ -195,7 +198,9 @@ def register(request):
 
     # The application is stored before the emails are attempted, so a mail
     # outage loses a notification but never loses the applicant.
-    notified, confirmed, error = send_application_emails(application)
+    admin_url = request.build_absolute_uri(
+        reverse("admin:applications_application_change", args=[application.pk]))
+    notified, confirmed, error = send_application_emails(application, admin_url=admin_url)
     application.notification_sent = notified
     application.confirmation_sent = confirmed
     application.save(update_fields=["notification_sent", "confirmation_sent"])

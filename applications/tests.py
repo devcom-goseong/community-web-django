@@ -72,7 +72,9 @@ class RegisterEndpointTests(TestCase):
         self.assertIn("Accepted rules, terms, privacy: Yes", team.body)
         self.assertIn("test.student@example.com", applicant.to[0])
         self.assertIn("Thanks for your interest", applicant.subject)
-        self.assertIn("rules.html", applicant.body)
+        self.assertIn("/rules/", applicant.body)
+        self.assertNotIn("netlify", (team.body + applicant.body).lower())
+        self.assertIn("/admin/applications/application/", team.body)
         self.assertTrue(application.notification_sent)
         self.assertTrue(application.confirmation_sent)
 

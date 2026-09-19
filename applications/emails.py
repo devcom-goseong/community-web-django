@@ -13,6 +13,7 @@ import logging
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, get_connection
+from django.urls import reverse
 from django.utils.html import escape
 
 log = logging.getLogger(__name__)
@@ -74,7 +75,13 @@ def _notification(application, admin_url):
 
 
 def _confirmation(application):
-    site = settings.PUBLIC_SITE_URL
+    # The community's own site now serves these pages, at /rules/ etc. — not
+    # the old static build. APP_URL is this app's address; there is no request
+    # to build from here.
+    site = settings.APP_URL
+    rules = f"{site}{reverse('content:page', args=['rules'])}"
+    terms = f"{site}{reverse('content:page', args=['terms'])}"
+    privacy = f"{site}{reverse('content:page', args=['privacy'])}"
     first_name = (application.name.split() or ["there"])[0]
     summary_lines = [
         f"Reason: {'A question' if application.is_question else 'Membership application'}",
@@ -100,9 +107,9 @@ Here is what you sent us:
 {summary}
 
 {("Your message:" + chr(10) + application.message + chr(10) + chr(10)) if application.message else ""}You can read what you agreed to at any time:
-  Rules:   {site}/rules.html
-  Terms:   {site}/terms.html
-  Privacy: {site}/privacy.html
+  Rules:   {rules}
+  Terms:   {terms}
+  Privacy: {privacy}
 
 If anything above is wrong, just reply to this email and tell us.
 
@@ -120,8 +127,8 @@ do not share them outside that team. Ask us to delete them and we will."""
   <p style="font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:{MUTED};margin:28px 0 8px">What you sent us</p>
   <div style="white-space:pre-wrap;border-left:2px solid {NAVY};padding:4px 0 4px 16px;font-size:14px">{escape(summary)}</div>
   {f'<div style="white-space:pre-wrap;border-left:2px solid {RULE};padding:4px 0 4px 16px;margin-top:16px;font-size:14px;color:{MUTED}">{escape(application.message)}</div>' if application.message else ""}
-  <p style="margin:24px 0 0">You agreed to the <a href="{site}/rules.html">community rules</a>,
-    <a href="{site}/terms.html">terms</a> and <a href="{site}/privacy.html">privacy notice</a>.
+  <p style="margin:24px 0 0">You agreed to the <a href="{rules}">community rules</a>,
+    <a href="{terms}">terms</a> and <a href="{privacy}">privacy notice</a>.
     If anything above is wrong, just reply to this email.</p>
   <p style="margin:24px 0 0;color:{MUTED}">— The {escape(settings.TEAM_NAME)} leadership team<br>Kyungdong University, South Korea</p>
 </div>"""
@@ -135,7 +142,7 @@ def send_application_emails(application, admin_url=""):
     the one that matters; a failed confirmation is logged and swallowed,
     because by then the team already has the application.
     """
-    admin_url = admin_url or f"{settings.PUBLIC_SITE_URL}"
+    admin_url = admin_url or f"{settings.APP_URL}/admin/"
     reply_to_applicant = f"{application.name} <{application.email}>"
     subject = (
         f"[KDU Dev] Question from {application.name}"
