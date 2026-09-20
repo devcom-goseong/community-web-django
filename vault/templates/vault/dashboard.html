@@ -1,0 +1,19 @@
+{% extends "vault/base.html" %}
+
+{% block content %}
+  <h1>The Vault <span class="sub">Everything the community keeps — members, events, applications and content.</span></h1>
+
+  {% for app, sections in groups.items %}
+    <h2>{{ app }}</h2>
+    <div class="grid">
+      {% for s in sections %}
+        <a class="card" href="{% url 'vault:list' label=s.label %}">
+          <div class="card__name">{{ s.name }}</div>
+          <div class="card__count">{{ s.count }} <small>record{{ s.count|pluralize }}</small></div>
+        </a>
+      {% endfor %}
+    </div>
+  {% empty %}
+    <div class="panel"><div class="empty">Nothing is registered to manage.</div></div>
+  {% endfor %}
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "vault/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <p class="crumbs"><a href="{% url 'vault:dashboard' %}">Vault</a> &rsaquo; {{ title }}</p>
+  <div class="toolbar">
+    <h1 style="margin:0">{{ title }}</h1>
+    <a class="btn" href="{% url 'vault:add' label=label %}">+ Add {{ singular|lower }}</a>
+  </div>
+
+  {% if has_search %}
+    <form class="search" method="get" style="margin:0 0 16px">
+      <input type="search" name="q" value="{{ q }}" placeholder="Search {{ title|lower }}">
+      <button class="btn btn--ghost" type="submit">Search</button>
+      {% if q %}<a class="btn btn--ghost" href="{% url 'vault:list' label=label %}">Clear</a>{% endif %}
+    </form>
+  {% endif %}
+
+  <div class="panel">
+    {% if rows %}
+      <table>
+        <thead><tr>{% for h in heads %}<th>{{ h }}</th>{% endfor %}<th></th></tr></thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              {% for cell in row.cells %}
+                <td>{% if forloop.first %}<a href="{% url 'vault:edit' label=label pk=row.pk %}">{{ cell }}</a>{% else %}{{ cell }}{% endif %}</td>
+              {% endfor %}
+              <td class="row-actions">
+                <a class="btn btn--ghost btn--sm" href="{% url 'vault:edit' label=label pk=row.pk %}">Edit</a>
+                <a class="btn btn--danger btn--sm" href="{% url 'vault:delete' label=label pk=row.pk %}">Delete</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty">{% if q %}Nothing matches &ldquo;{{ q }}&rdquo;.{% else %}No {{ title|lower }} yet.{% endif %}</div>
+    {% endif %}
+  </div>
+
+  {% if page.paginator.num_pages > 1 %}
+    <div class="pager">
+      {% if page.has_previous %}<a href="?{% if q %}q={{ q }}&amp;{% endif %}page={{ page.previous_page_number }}">&larr; Newer</a>{% endif %}
+      <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+      {% if page.has_next %}<a href="?{% if q %}q={{ q }}&amp;{% endif %}page={{ page.next_page_number }}">Older &rarr;</a>{% endif %}
+    </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "vault/base.html" %}
+
+{% block title %}{% if instance %}Edit{% else %}Add{% endif %} {{ title }}{% endblock %}
+
+{% block content %}
+  <p class="crumbs"><a href="{% url 'vault:dashboard' %}">Vault</a> &rsaquo;
+    <a href="{% url 'vault:list' label=label %}">{{ title }}</a> &rsaquo;
+    {% if instance %}Edit{% else %}Add{% endif %}</p>
+  <h1>{% if instance %}Edit {{ title|lower }}{% else %}Add {{ title|lower }}{% endif %}
+    {% if instance %}<span class="sub">{{ instance }}</span>{% endif %}</h1>
+
+  <div class="panel pad" style="max-width:720px">
+    <form class="stack" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="msg msg--error">{{ form.non_field_errors }}</div>{% endif %}
+      {{ form.as_p }}
+      <div class="form-actions">
+        <button class="btn" type="submit">Save</button>
+        <a class="btn btn--ghost" href="{% url 'vault:list' label=label %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

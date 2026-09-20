@@ -12,6 +12,7 @@ admin.site.index_title = "Members, events and applications"
 urlpatterns = [
     # The Django admin lives at an unguessable path rather than /admin/.
     path("royal-jelly/", admin.site.urls),
+    path("vault/", include("vault.urls")),
     path("api/", include("applications.urls")),
     path("account/", include("accounts.urls")),
     path("members/", include("accounts.members_urls")),

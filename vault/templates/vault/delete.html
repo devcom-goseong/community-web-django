@@ -1,0 +1,20 @@
+{% extends "vault/base.html" %}
+
+{% block title %}Delete {{ title }}{% endblock %}
+
+{% block content %}
+  <p class="crumbs"><a href="{% url 'vault:dashboard' %}">Vault</a> &rsaquo;
+    <a href="{% url 'vault:list' label=label %}">{{ title }}</a> &rsaquo; Delete</p>
+  <h1>Delete this {{ title|lower }}?</h1>
+
+  <div class="panel pad" style="max-width:640px">
+    <p>You are about to permanently delete:</p>
+    <p style="font-size:18px;font-weight:700;color:#f3efe2">{{ object }}</p>
+    <p class="muted">This cannot be undone, and anything that depends on it may be removed too.</p>
+    <form method="post" class="form-actions" style="border:0;padding:0;margin-top:20px">
+      {% csrf_token %}
+      <button class="btn btn--danger" type="submit">Yes, delete it</button>
+      <a class="btn btn--ghost" href="{% url 'vault:list' label=label %}">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

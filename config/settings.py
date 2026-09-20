@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "applications",
     "accounts",
     "events",
+    "vault",
 ]
 
 MIDDLEWARE = [
@@ -229,6 +230,10 @@ APP_URL = env("APP_URL", "http://localhost:8000").rstrip("/")
 # the environment and it appears as a <meta> tag in the site head; left empty,
 # no tag is rendered. Verification by DNS or file does not need this.
 GOOGLE_SITE_VERIFICATION = env("GOOGLE_SITE_VERIFICATION", "")
+
+# The single password that unlocks the bespoke "vault" admin console. Kept in
+# the environment, never in the code; empty means the vault cannot be unlocked.
+VAULT_PASSWORD = env("VAULT_PASSWORD", "")
 
 # Where the join form posts. Same-origin here, so the front-end script needs no
 # change whether the pages are served by Django or by the static site.
