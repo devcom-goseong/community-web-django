@@ -74,7 +74,7 @@ class RegisterEndpointTests(TestCase):
         self.assertIn("Thanks for your interest", applicant.subject)
         self.assertIn("/rules/", applicant.body)
         self.assertNotIn("netlify", (team.body + applicant.body).lower())
-        self.assertIn("/admin/applications/application/", team.body)
+        self.assertIn("/royal-jelly/applications/application/", team.body)
         self.assertTrue(application.notification_sent)
         self.assertTrue(application.confirmation_sent)
 

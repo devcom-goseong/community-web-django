@@ -68,7 +68,7 @@ def seo(request):
     string, so the template prints it without escaping the JSON.
     """
     verification = settings.GOOGLE_SITE_VERIFICATION
-    if request.path.startswith(("/admin/", "/api/")):
+    if request.path.startswith(("/royal-jelly/", "/api/")):
         return {"google_site_verification": verification, "structured_data": ""}
     from . import seo as seo_data  # local import keeps app loading cycle-free
     same_as = list(SocialLink.objects.live().filter(members_only=False)

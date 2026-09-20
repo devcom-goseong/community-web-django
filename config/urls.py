@@ -10,7 +10,8 @@ admin.site.site_title = "KDU Developer Community"
 admin.site.index_title = "Members, events and applications"
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    # The Django admin lives at an unguessable path rather than /admin/.
+    path("royal-jelly/", admin.site.urls),
     path("api/", include("applications.urls")),
     path("account/", include("accounts.urls")),
     path("members/", include("accounts.members_urls")),

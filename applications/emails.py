@@ -142,7 +142,7 @@ def send_application_emails(application, admin_url=""):
     the one that matters; a failed confirmation is logged and swallowed,
     because by then the team already has the application.
     """
-    admin_url = admin_url or f"{settings.APP_URL}/admin/"
+    admin_url = admin_url or f"{settings.APP_URL}{reverse('admin:index')}"
     reply_to_applicant = f"{application.name} <{application.email}>"
     subject = (
         f"[KDU Dev] Question from {application.name}"
