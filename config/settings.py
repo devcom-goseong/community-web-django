@@ -242,6 +242,13 @@ FORM_ENDPOINT = env("FORM_ENDPOINT", "/api/register")
 # --- Form protection ------------------------------------------------------
 MIN_FILL_SECONDS = float(env("MIN_FILL_SECONDS", "1.5"))
 MAX_FILL_SECONDS = float(env("MAX_FILL_SECONDS", str(12 * 60 * 60)))
+# The join form refuses marketing pitches outright; applications/spam.py holds
+# the built-in list. These two adjust it without a code change: extra terms to
+# refuse, and terms from the built-in list to allow again (useful if a genuine
+# member is ever turned away by a word like "seo").
+EXTRA_BLOCKED_TERMS = env_list("EXTRA_BLOCKED_TERMS")
+UNBLOCKED_TERMS = env_list("UNBLOCKED_TERMS")
+
 RATE_LIMIT_MAX = int(env("RATE_LIMIT_MAX", "5"))
 RATE_LIMIT_WINDOW_SECONDS = int(env("RATE_LIMIT_WINDOW_SECONDS", "600"))
 

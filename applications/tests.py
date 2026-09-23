@@ -186,3 +186,95 @@ class AdminTests(TestCase):
         from .admin import ApplicationAdmin
         admin_instance = ApplicationAdmin(Application, site)
         self.assertFalse(admin_instance.has_add_permission(None))
+
+
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+    GMAIL_USER="kdu@example.com",
+    EMAIL_HOST_USER="kdu@example.com",
+    EMAIL_HOST_PASSWORD="app-password",
+    TEAM_INBOX="team@example.com",
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
+    RATE_LIMIT_MAX=500,
+    EXTRA_BLOCKED_TERMS=[],
+    UNBLOCKED_TERMS=[],
+)
+class MarketingPitchTests(TestCase):
+    """The form refuses SEO and marketing offers outright."""
+
+    url = "/api/register"
+
+    def send(self, message, name="Test Student"):
+        return self.client.post(
+            self.url, payload(message=message, name=name), content_type=JSON)
+
+    def assertRefused(self, message, name="Test Student"):
+        mail.outbox = []
+        before = Application.objects.count()
+        response = self.send(message, name)
+        self.assertEqual(response.status_code, 422, f"should have been refused: {message!r}")
+        body = response.json()
+        self.assertFalse(body["ok"])
+        self.assertIn("not submitted", body["message"].lower())
+        self.assertEqual(Application.objects.count(), before, "nothing new is stored")
+        self.assertEqual(mail.outbox, [], "nobody is emailed")
+
+    def assertAccepted(self, message, name="Test Student"):
+        Application.objects.all().delete()
+        response = self.send(message, name)
+        self.assertEqual(response.status_code, 200, f"should have gone through: {message!r}")
+        self.assertTrue(Application.objects.exists())
+
+    def test_real_pitches_are_refused(self):
+        pitches = [
+            "Hello, I came across your website and noticed it is not ranking on the first "
+            "page of Google. Our SEO agency can help.",
+            "We offer SEO services at an affordable price. Reply for a free audit.",
+            "I can build quality backlinks and improve your domain authority.",
+            "Interested in link building and guest posting on your site?",
+            "Our digital marketing team can increase traffic and generate leads for you.",
+            "We provide web design services and app development services at low cost.",
+            "Do you want to rank higher on google search? We handle keyword research.",
+            "Hire our team of developers, see our portfolio. White label available.",
+            "Google Ads and PPC campaign management, no obligation quote.",
+            "Make money online with this investment opportunity.",
+        ]
+        for pitch in pitches:
+            with self.subTest(pitch=pitch[:40]):
+                self.assertRefused(pitch)
+
+    def test_it_reads_through_punctuation_and_capitals(self):
+        for pitch in ("We do S.E.O. and nothing else.",
+                      "S-E-O experts here.",
+                      "SEARCH  ENGINE   OPTIMISATION specialists",
+                      "Gét your website to #1 on Google"):
+            with self.subTest(pitch=pitch):
+                self.assertRefused(pitch)
+
+    def test_a_pitch_in_the_name_field_is_refused_too(self):
+        self.assertRefused("Hello, we would like to work with you.", name="Best SEO Agency")
+
+    def test_genuine_messages_still_go_through(self):
+        for message in [
+            "I want to learn web development and join the weekly meeting.",
+            "Hi, I am a first-year student. Can I join if I have never coded?",
+            "I am interested in AI and data, and I would like to meet other students.",
+            "Do you have a study group for the Python certification?",
+            "I design posters and would like to help with the events.",
+            "I read the rules and I agree with them. I hope to join a project team.",
+            "My roads project needs people. Is that the kind of thing you do?",
+            "I am studying museology but I write code in my spare time.",
+        ]:
+            with self.subTest(message=message[:40]):
+                self.assertAccepted(message)
+
+    @override_settings(UNBLOCKED_TERMS=["seo"])
+    def test_a_term_can_be_allowed_again_without_a_code_change(self):
+        self.assertAccepted("I want to learn SEO as part of web development.")
+        # The longer pitches still do not get through.
+        self.assertRefused("We offer SEO services at an affordable price.")
+
+    @override_settings(EXTRA_BLOCKED_TERMS=["press release service"])
+    def test_the_team_can_add_their_own_terms(self):
+        self.assertRefused("We run a press release service for startups.")

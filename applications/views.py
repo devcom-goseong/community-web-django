@@ -30,6 +30,7 @@ from config.ratelimit import client_ip, rate_limited
 
 from .emails import send_application_emails
 from .models import Application
+from .spam import find_blocked_term
 
 log = logging.getLogger(__name__)
 
@@ -166,6 +167,20 @@ def register(request):
         consented_to_contact=_truthy(data.get("consent")),
         accepted_documents=_truthy(data.get("agree")),
     )
+
+    # Marketing pitches are turned away outright: not stored, nobody emailed.
+    # Checked on what a person typed, not on the tick boxes or the address.
+    blocked = find_blocked_term(application.message, application.name)
+    if blocked:
+        log.info("register: refused a submission containing %r", blocked)
+        return _fail(
+            wants_json, 422,
+            "This was not submitted. The form is for people who want to join the community "
+            "or ask about it, not for SEO, marketing or web design offers. If you are a "
+            "person who wants to join and this is a mistake, take the marketing wording out "
+            "and send it again.",
+            ["message"] if find_blocked_term(application.message) else ["name"],
+        )
 
     fields = []
     if not application.name:

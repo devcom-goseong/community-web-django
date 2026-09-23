@@ -201,6 +201,45 @@ version that read it could be bypassed by sending a made-up header.
 
 ---
 
+## Marketing pitches are refused
+
+The join form is for people who want to join or ask something. Cold outreach —
+offers to improve the site's Google ranking, sell backlinks, redesign the site,
+run ads — is refused outright: nothing is stored, nobody is emailed, and the
+sender is told plainly that it was not submitted.
+
+`applications/spam.py` holds the list. It matches on whole words after folding
+accents and turning punctuation into spaces, so "S.E.O.", "S E O" and "SEO" all
+count, while "museology" and "roads" do not. Only the name and the message are
+checked — not the email address, because someone with an agency address may
+still be a real student, and not the interest tick boxes.
+
+Two environment variables tune it without touching the code:
+
+| Variable | What it does |
+| --- | --- |
+| `EXTRA_BLOCKED_TERMS` | More terms to refuse, comma separated |
+| `UNBLOCKED_TERMS` | Terms from the built-in list to allow again |
+
+`UNBLOCKED_TERMS` matters more than it looks. Some entries are deliberately
+blunt because that is what was asked for, and they will also turn away a
+genuine member:
+
+- **seo** — refuses "I want to learn SEO".
+- **digital marketing**, **email marketing**, **social media marketing** —
+  refuse a student who says that is what they are interested in.
+
+If that happens, put the word in `UNBLOCKED_TERMS`. The longer phrases
+("seo services", "marketing agency", "i came across your website") keep working,
+and those are what the real pitches say. Refusals are logged with the term that
+matched — `journalctl -u kdu.service | grep "refused a submission"` — so it is
+easy to see what is being turned away and whether the list is too keen.
+
+The account sign-up form is not filtered this way; it has its own honeypot and
+timing check, and an account on its own gives nobody anything.
+
+---
+
 ## Read this before you switch the form over
 
 The published privacy notice currently says, in section 2:
@@ -277,7 +316,9 @@ python manage.py check --deploy --fail-level WARNING
 About 150 tests, which run in a few seconds.
 
 - **The form endpoint:** validation, the required agreement, the honeypot, the
-  timing trap, rate limiting, CR/LF stripping from mail headers, HTML escaping,
+  timing trap, refusing marketing pitches (ten real pitch shapes, punctuation
+  and capitals, a pitch hidden in the name, and eight genuine messages that
+  must still go through), rate limiting, CR/LF stripping from mail headers, HTML escaping,
   the no-JavaScript path, and that an application survives an email outage. One
   test asserts the submitter's IP is never written to the database, because the
   privacy notice says so and a promise in prose is worth less than a test.
