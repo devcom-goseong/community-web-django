@@ -11,13 +11,14 @@
       <div class="split__aside">
         <div class="plate"><h2 class="plate__title" id="signin-title">No account yet?</h2></div>
         <p class="mt-6">
-          You do not need one to reach us. The
-          <a href="{% url 'content:join' %}">join form</a> works without signing in, and a
+          You do not create your own account. Fill in the
+          <a href="{% url 'content:join' %}">join form</a> — it works without signing in — and a
           person on the leadership team reads everything that comes through it.
         </p>
         <p class="mt-5">
-          If you would rather have an account,
-          <a href="{% url 'accounts:signup' %}">create one</a>.
+          When they accept you, we set up your account and email you a link to choose a
+          password. After that you sign in here. If a link ever runs out, use
+          <a href="{% url 'accounts:password_reset' %}">Forgotten your password?</a> for a fresh one.
         </p>
       </div>
 

@@ -153,6 +153,28 @@ def _form_class(model, model_admin):
     return modelform_factory(model, fields=fields)
 
 
+def _apply_side_effects(request, form, obj):
+    """Some edits must do more than write a row. Accepting a membership
+    application is the one that matters here: exactly as in the Django admin, it
+    has to create or approve the member's account and send the set-a-password
+    email, not merely flip the status column. Without this, an application
+    accepted from the Vault would leave the person with no way in."""
+    from applications.models import Application
+
+    if (isinstance(obj, Application) and "status" in form.changed_data
+            and obj.status == Application.Status.ACCEPTED):
+        from accounts.services import accept_applications
+
+        created, approved = accept_applications([obj], request)
+        if created:
+            messages.success(
+                request,
+                f"{created} member account(s) created — a set-a-password email is on the way.")
+        if approved:
+            messages.success(
+                request, f"{approved} existing member account(s) approved as well.")
+
+
 @vault_required
 def object_edit(request, label, pk=None):
     model, model_admin = _lookup(label)
@@ -162,6 +184,7 @@ def object_edit(request, label, pk=None):
         form = form_class(request.POST, request.FILES, instance=instance)
         if form.is_valid():
             obj = form.save()
+            _apply_side_effects(request, form, obj)
             verb = "Updated" if instance else "Created"
             messages.success(request, f"{verb} {model._meta.verbose_name} “{obj}”.")
             return redirect("vault:list", label=label)

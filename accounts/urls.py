@@ -6,7 +6,8 @@ from . import views
 app_name = "accounts"
 
 urlpatterns = [
-    path("sign-up/", views.signup, name="signup"),
+    # No public sign-up: people join through the join form, and the leadership
+    # team creates the account when it accepts them (see applications + services).
     path("sign-in/", views.SignIn.as_view(), name="login"),
     path("sign-out/", views.SignOut.as_view(), name="logout"),
     path("me/", views.dashboard, name="dashboard"),

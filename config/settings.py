@@ -142,9 +142,11 @@ LOGIN_URL = "/account/sign-in/"
 LOGIN_REDIRECT_URL = "/account/me/"
 LOGOUT_REDIRECT_URL = "/"
 
-# Three days, matching the confirmation link, so the two do not expire at
-# noticeably different times and confuse someone working through their inbox.
-PASSWORD_RESET_TIMEOUT = 3 * 24 * 60 * 60
+# Fourteen days. This governs both the "forgotten password" link and the
+# set-a-password link that goes out when the team accepts someone (their only
+# way in — see accounts.services.accept_applications), so it is generous enough
+# that an invitation does not lapse before a new member gets to their inbox.
+PASSWORD_RESET_TIMEOUT = 14 * 24 * 60 * 60
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

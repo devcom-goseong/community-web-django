@@ -25,85 +25,133 @@ TEST_SETTINGS = {
     "EMAIL_BACKEND": "django.core.mail.backends.locmem.EmailBackend",
 }
 
-GOOD = {
-    "display_name": "Sam Park",
-    "email": "sam@example.org",
-    "student": "yes",
-    "student_id": "20260001",
-    "password1": "correct-horse-battery",
-    "password2": "correct-horse-battery",
-    "accepted_documents": "on",
-}
-
-
 @override_settings(**TEST_SETTINGS)
-class SignUpTests(TestCase):
+class AcceptCreatesAccountTests(TestCase):
+    """Joining is the only door. There is no public sign-up; the leadership team
+    creates the account when it accepts an application, and the person sets a
+    password from the link that acceptance emails them."""
+
     def setUp(self):
         cache.clear()
-        InterestArea.objects.create(name="Programming", order=0)
         mail.outbox = []
 
-    def post(self, **overrides):
-        data = {**GOOD, **overrides}
-        return self.client.post(reverse("accounts:signup"), data)
+    def _application(self, **overrides):
+        data = dict(
+            intent=Application.Intent.JOIN, name="Sam Park", email="sam@example.org",
+            student="yes", student_id="20260001", interests=["Programming"],
+            accepted_documents=True, accepted_at=timezone.now(),
+            status=Application.Status.ACCEPTED,
+        )
+        data.update(overrides)
+        return Application.objects.create(**data)
 
-    def test_signing_up_creates_a_user_and_a_member(self):
-        response = self.post()
-        self.assertRedirects(response, reverse("accounts:dashboard"))
+    def test_there_is_no_public_sign_up_route(self):
+        from django.urls import NoReverseMatch
+
+        with self.assertRaises(NoReverseMatch):
+            reverse("accounts:signup")
+
+    def test_accepting_creates_an_active_confirmed_member(self):
+        from .services import accept_applications
+
+        with self.captureOnCommitCallbacks(execute=True):
+            created, approved = accept_applications([self._application()])
+        self.assertEqual((created, approved), (1, 0))
 
         user = UserModel.objects.get(email="sam@example.org")
         self.assertEqual(user.username, "sam@example.org")
-        self.assertEqual(user.member.display_name, "Sam Park")
-        self.assertEqual(user.member.status, Member.Status.PENDING)
-
-    def test_the_password_is_hashed_not_stored(self):
-        self.post()
-        user = UserModel.objects.get(email="sam@example.org")
-        self.assertNotIn("correct-horse-battery", user.password)
-        self.assertTrue(user.check_password("correct-horse-battery"))
-
-    def test_the_consent_box_actually_stops_the_submission(self):
-        response = self.client.post(reverse("accounts:signup"),
-                                    {k: v for k, v in GOOD.items() if k != "accepted_documents"})
-        self.assertEqual(response.status_code, 200)
-        self.assertFalse(UserModel.objects.filter(email="sam@example.org").exists())
-
-    def test_accepting_is_recorded_with_a_timestamp(self):
-        self.post()
-        member = Member.objects.get(user__email="sam@example.org")
+        member = user.member
+        self.assertEqual(member.display_name, "Sam Park")
+        self.assertEqual(member.student, "yes")
+        self.assertEqual(member.student_id, "20260001")
+        self.assertEqual(member.interests, ["Programming"])
+        self.assertEqual(member.status, Member.Status.ACTIVE)
+        self.assertTrue(member.is_verified)
         self.assertTrue(member.accepted_documents)
         self.assertIsNotNone(member.accepted_at)
 
-    def test_signing_up_while_already_signed_in_just_goes_to_the_account(self):
-        self.post()
-        self.assertRedirects(self.post(email="other@example.org"),
-                             reverse("accounts:dashboard"))
-        self.assertEqual(UserModel.objects.count(), 1)
+    def test_the_new_account_has_no_usable_password_until_the_link_is_used(self):
+        from .services import accept_applications
 
-    def test_an_address_cannot_be_used_twice(self):
-        self.post()
-        self.client.logout()
-        response = self.post(display_name="Someone Else")
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "already an account")
+        with self.captureOnCommitCallbacks(execute=True):
+            accept_applications([self._application()])
+        self.assertFalse(UserModel.objects.get(email="sam@example.org").has_usable_password())
+
+    def test_an_invite_email_with_a_set_password_link_goes_out(self):
+        from .services import accept_applications
+
+        with self.captureOnCommitCallbacks(execute=True):
+            accept_applications([self._application()])
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+        self.assertIn("sam@example.org", message.to)
+        self.assertIn("Set your password", message.subject)
+        self.assertIn("/account/password/reset/", message.body)
+
+    def test_the_set_password_link_lets_them_choose_a_password(self):
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.encoding import force_bytes
+        from django.utils.http import urlsafe_base64_encode
+
+        from .services import accept_applications
+
+        with self.captureOnCommitCallbacks(execute=True):
+            accept_applications([self._application()])
+        user = UserModel.objects.get(email="sam@example.org")
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        # Django's confirm view moves the token into the session and redirects
+        # to a set-password form served under the literal "set-password" token.
+        self.client.get(reverse("accounts:password_reset_confirm",
+                                kwargs={"uidb64": uidb64, "token": token}))
+        set_url = reverse("accounts:password_reset_confirm",
+                          kwargs={"uidb64": uidb64, "token": "set-password"})
+        response = self.client.post(set_url, {
+            "new_password1": "correct-horse-battery",
+            "new_password2": "correct-horse-battery"})
+        self.assertEqual(response.status_code, 302)
+
+        user.refresh_from_db()
+        self.assertTrue(user.has_usable_password())
+        self.assertTrue(user.check_password("correct-horse-battery"))
+
+    def test_a_question_does_not_create_an_account(self):
+        from .services import accept_applications
+
+        app = self._application(intent=Application.Intent.QUESTION, email="asker@example.org")
+        with self.captureOnCommitCallbacks(execute=True):
+            created, approved = accept_applications([app])
+        self.assertEqual((created, approved), (0, 0))
+        self.assertFalse(UserModel.objects.filter(email="asker@example.org").exists())
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_accepting_the_same_person_twice_makes_only_one_account(self):
+        from .services import accept_applications
+
+        app = self._application()
+        with self.captureOnCommitCallbacks(execute=True):
+            accept_applications([app])
+        with self.captureOnCommitCallbacks(execute=True):
+            created, approved = accept_applications([app])
+        self.assertEqual((created, approved), (0, 0))
         self.assertEqual(UserModel.objects.filter(email__iexact="sam@example.org").count(), 1)
 
-    def test_a_different_case_of_the_same_address_is_still_the_same_address(self):
-        self.post()
-        self.client.logout()
-        response = self.post(email="SAM@EXAMPLE.ORG")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(UserModel.objects.count(), 1)
+    def test_an_existing_confirmed_account_is_approved_not_duplicated(self):
+        from .services import accept_applications
 
-    def test_a_welcome_email_goes_out(self):
-        self.post()
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("sam@example.org", mail.outbox[0].to)
-        self.assertIn("/account/verify/", mail.outbox[0].body)
+        user = UserModel.objects.create_user(
+            username="sam@example.org", email="sam@example.org", password="x")
+        member = Member.objects.create(
+            user=user, display_name="Sam", status=Member.Status.PENDING)
+        member.mark_verified()
 
-    def test_a_new_account_starts_unverified(self):
-        self.post()
-        self.assertFalse(Member.objects.get(user__email="sam@example.org").is_verified)
+        with self.captureOnCommitCallbacks(execute=True):
+            created, approved = accept_applications([self._application()])
+        self.assertEqual((created, approved), (0, 1))
+        member.refresh_from_db()
+        self.assertEqual(member.status, Member.Status.ACTIVE)
+        self.assertEqual(UserModel.objects.filter(email__iexact="sam@example.org").count(), 1)
 
 
 @override_settings(**TEST_SETTINGS)

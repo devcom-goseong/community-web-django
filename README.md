@@ -57,14 +57,16 @@ it at setup, and edit in the admin after that.
 
 ## Member accounts
 
-Anyone can use the join form without an account — that has not changed. An
-account is what comes afterwards: it is how somebody gets into the community's
-chats, finds people to build with, signs up for events and keeps a profile.
+Anyone can use the join form without an account — that has not changed. Nobody
+creates their own account: when the leadership team accepts a join application it
+creates the account and emails a set-a-password link (see `accounts.services.accept_applications`).
+The account is how somebody gets into the community's chats, finds people to
+build with, signs up for events and keeps a profile.
 
 | Address | What it is |
 | --- | --- |
-| `/account/sign-up/` | Create an account. Requires accepting the rules, terms and privacy notice, exactly as the join form does |
 | `/account/sign-in/` | Sign in with an email address |
+| `/account/password/reset/` | Set or reset a password — also the link an accepted member follows to choose their first one |
 | `/account/me/` | A member's own page: where they are on the way in, the invite links once approved, their events, their profile |
 | `/account/profile/` | Edit the profile: name, address, who can see it, introduction, interests, links, projects |
 | `/account/close/` | Close the account. Deletes everything on it, after asking for the password |
@@ -235,8 +237,9 @@ and those are what the real pitches say. Refusals are logged with the term that
 matched — `journalctl -u kdu.service | grep "refused a submission"` — so it is
 easy to see what is being turned away and whether the list is too keen.
 
-The account sign-up form is not filtered this way; it has its own honeypot and
-timing check, and an account on its own gives nobody anything.
+There is no public account sign-up to filter: accounts are created by the
+leadership team when it accepts a join application, so the join form is the only
+public entry point and the only one that needs this keyword filter.
 
 ---
 
@@ -463,7 +466,8 @@ browser will block the request.
 | `content/context_processors.py` | Where members-only invite links are withheld, for every page |
 | `config/ratelimit.py` | The shared rate limiter |
 | `accounts/backends.py` | Signing in with an email address rather than a username |
-| `accounts/forms.py` | Sign-up, sign-in and profile forms, in the site's own markup |
+| `accounts/forms.py` | Sign-in and profile forms, in the site's own markup |
+| `accounts/services.py` | Accepting a join application: creates or approves the account and sends the set-a-password invite |
 | `accounts/emails.py` | The welcome email and the signed confirmation link |
 | `content/models.py` | Every editable piece of the site, including `SocialLink` |
 | `content/seed_data/` | The starting copy. Data modules, not commands — they used to sit in `management/commands/`, where Django listed them as commands that crashed when run |

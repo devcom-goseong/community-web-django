@@ -85,22 +85,75 @@ def approve_if_already_accepted(member):
     return accepted
 
 
-def approve_accounts_for_applications(applications):
-    """The other direction: accepting an application approves a matching account.
+def accept_applications(applications, request=None):
+    """Accept membership applications by creating or approving the account.
 
-    Only accounts whose address is confirmed are approved, for the same reason
-    as above. An unconfirmed one is approved later, by approve_if_already_accepted,
-    when its owner opens the confirmation link.
+    People who join do not make their own account — the leadership team makes it
+    here, when it accepts them. For each accepted membership application:
+
+      * with no account for the address yet, one is created active, its email
+        already confirmed (the team vouched, and the set-a-password link below
+        only ever reaches the real address), carrying the name, student details,
+        interests and the consent record over from the application; an email
+        goes out inviting them to set a password.
+      * with an account already there (an official made one by hand, say), it is
+        approved instead, as before, once its address is confirmed.
+
+    Returns (created, approved).
     """
-    emails = {a.email.lower() for a in applications if a.intent == a.Intent.JOIN}
-    if not emails:
-        return 0
-    approved = 0
-    candidates = (Member.objects.select_related("user")
-                  .annotate(email_lower=Lower("user__email"))
-                  .filter(email_lower__in=emails, status=Member.Status.PENDING,
-                          email_verified_at__isnull=False))
-    for member in candidates:
-        if change_status(member, Member.Status.ACTIVE):
-            approved += 1
-    return approved
+    from django.contrib.auth import get_user_model
+
+    users = get_user_model().objects
+    created = approved = 0
+    for app in applications:
+        if app.intent != app.Intent.JOIN:
+            continue
+        email = (app.email or "").strip()
+        if not email:
+            continue
+        user = (users.annotate(email_lower=Lower("email"))
+                .filter(email_lower=email.lower()).select_related("member").first())
+        if user is None:
+            member = _create_active_member(app, email)
+            created += 1
+            transaction.on_commit(lambda mid=member.pk: _send_invite(mid, request))
+        else:
+            member = getattr(user, "member", None)
+            if (member is not None and member.is_verified
+                    and member.status == Member.Status.PENDING
+                    and change_status(member, Member.Status.ACTIVE)):
+                approved += 1
+    return created, approved
+
+
+def _create_active_member(app, email):
+    """The User and Member for an accepted applicant. No usable password: they
+    choose one through the set-a-password link in the invitation."""
+    from django.contrib.auth import get_user_model
+
+    now = timezone.now()
+    with transaction.atomic():
+        user = get_user_model()(
+            username=email[:150], email=email, first_name=(app.name or "")[:150])
+        user.set_unusable_password()
+        user.save()
+        return Member.objects.create(
+            user=user,
+            display_name=app.name or email,
+            student=app.student or "",
+            student_id=app.student_id or "",
+            interests=list(app.interests or []),
+            accepted_documents=bool(app.accepted_documents),
+            accepted_at=app.accepted_at,
+            email_verified_at=now,
+            status=Member.Status.ACTIVE,
+            approved_at=now,
+        )
+
+
+def _send_invite(member_id, request):
+    from .emails import send_invite_email
+
+    member = Member.objects.select_related("user").filter(pk=member_id).first()
+    if member is not None:
+        send_invite_email(member, request)

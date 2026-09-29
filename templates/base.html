@@ -154,7 +154,7 @@
           {% if user.is_authenticated %}
             <li><a href="{% url 'accounts:dashboard' %}">Your account</a></li>
           {% else %}
-            <li><a href="{% url 'accounts:signup' %}">Create an account</a></li>
+            <li><a href="{% url 'content:join' %}">Join the community</a></li>
             <li><a href="{% url 'accounts:login' %}">Sign in</a></li>
           {% endif %}
           <li><a href="{% url 'content:page' 'start' %}">Your first month</a></li>

@@ -11,7 +11,7 @@ import logging
 from functools import wraps
 
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.paginator import Paginator
@@ -31,7 +31,6 @@ from content.models import SocialLink
 from content.views import base_context
 
 from .access import access_state, can_see_members_area, is_staff, member_of
-from .antispam import is_bot_signup, new_timestamp
 from .emails import read_token, send_approval_email, send_welcome_email
 from .forms import (
     CloseAccountForm,
@@ -39,7 +38,6 @@ from .forms import (
     EmailLoginForm,
     ProfileForm,
     ProjectFormSet,
-    SignUpForm,
 )
 from .models import Member
 from .services import approve_if_already_accepted
@@ -74,56 +72,12 @@ def _restricted(request, kind, status):
     return render(request, "members/restricted.html", context, status=status)
 
 
-# --- signing up and in ------------------------------------------------------
-
-@require_http_methods(["GET", "POST"])
-def signup(request):
-    if request.user.is_authenticated:
-        return redirect("accounts:dashboard")
-
-    form = SignUpForm(request.POST or None)
-
-    if request.method == "POST":
-        bot, reason = is_bot_signup(request)
-        if bot:
-            # Turn a bot away without a word it can learn from: it is told the
-            # same thing a real new member is told, but no account is made and
-            # no email is sent. A person never reaches this branch — the
-            # honeypot is hidden and nobody fills the form in three seconds.
-            log.info("signup: ignored a likely automated submission (%s)", reason)
-            messages.success(
-                request,
-                "Your account is ready. We have sent a link to "
-                f"{request.POST.get('email', 'your address')} — "
-                "open it to confirm the address.")
-            return redirect("accounts:login")
-        # A sign-up form is a free way to send mail to any address somebody
-        # types, so it is rate limited like the join form.
-        if rate_limited(request, scope="signup"):
-            messages.error(request, "Too many attempts from this connection. "
-                                    "Please wait a few minutes and try again.")
-        elif form.is_valid():
-            user = form.save()
-            sent = send_welcome_email(user.member, request)
-            login(request, user, backend="accounts.backends.EmailBackend")
-            if sent:
-                messages.success(
-                    request,
-                    f"Your account is ready. We have sent a link to {user.email} — "
-                    "open it to confirm the address.")
-            else:
-                messages.warning(
-                    request,
-                    "Your account is ready, but we could not send the confirmation "
-                    "email just now. You can ask for another one below.")
-            return redirect("accounts:dashboard")
-
-    return render(request, "accounts/signup.html", _context(
-        request, "Create an account",
-        "Create an account for the KDU Developer Community.",
-        form=form, signup_ts=new_timestamp(),
-    ))
-
+# --- signing in -------------------------------------------------------------
+#
+# There is no public sign-up. People join through the join form; the leadership
+# team accepts them, which creates the account and emails a set-a-password link
+# (see applications.admin and accounts.services.accept_applications). The verify
+# and resend views below stay for accounts confirming their address the old way.
 
 @require_http_methods(["GET"])
 def verify(request, token):

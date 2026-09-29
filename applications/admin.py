@@ -56,11 +56,10 @@ class ApplicationAdmin(admin.ModelAdmin):
         if "status" in form.changed_data and obj.status == Application.Status.ACCEPTED:
             # The same as the list action, for an application accepted from
             # its own page.
-            from accounts.services import approve_accounts_for_applications
+            from accounts.services import accept_applications
 
-            if approve_accounts_for_applications([obj]):
-                self.message_user(request, "Their member account was approved as well.",
-                                  messages.SUCCESS)
+            created, approved = accept_applications([obj], request)
+            self._report_accept(request, created, approved)
 
     def _set_status(self, request, queryset, status, label):
         updated = queryset.update(status=status, reviewed_by=request.user,
@@ -71,20 +70,30 @@ class ApplicationAdmin(admin.ModelAdmin):
     def mark_reviewing(self, request, queryset):
         self._set_status(request, queryset, Application.Status.REVIEWING, "as being reviewed")
 
-    @admin.action(description="Mark as accepted (also approves a matching member account)")
+    @admin.action(description="Mark as accepted (creates or approves the member account)")
     def mark_accepted(self, request, queryset):
         applications = list(queryset)
         self._set_status(request, queryset, Application.Status.ACCEPTED, "accepted")
 
-        # Someone who applied and also made an account should not have to be
-        # approved twice. Only confirmed accounts are approved here; one that
-        # is not confirmed yet is approved when its owner confirms it.
-        from accounts.services import approve_accounts_for_applications
+        # Accepting is what makes someone a member: for each join application it
+        # creates the account (and emails a set-a-password link) or, if one was
+        # already made by hand, approves it. Only confirmed accounts are approved;
+        # a newly created account is confirmed for them, since only they receive
+        # the link.
+        from accounts.services import accept_applications
 
-        approved = approve_accounts_for_applications(applications)
+        created, approved = accept_applications(applications, request)
+        self._report_accept(request, created, approved)
+
+    def _report_accept(self, request, created, approved):
+        if created:
+            self.message_user(
+                request,
+                f"{created} member account(s) created — a set-a-password email is on the way.",
+                messages.SUCCESS)
         if approved:
             self.message_user(
-                request, f"{approved} matching member account(s) approved as well.",
+                request, f"{approved} existing member account(s) approved as well.",
                 messages.SUCCESS)
 
     @admin.action(description="Mark as declined")

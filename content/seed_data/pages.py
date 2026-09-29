@@ -121,8 +121,9 @@ PAGES = [
     {
         "slug": "privacy", "title": "Privacy notice", "order": 2,
         "eyebrow": "Privacy · Plainly put",
-        "lead": "What the KDU Developer Community collects when you use the form, create an "
-                "account or sign up for an event, who can see it, and how to have it deleted.",
+        "lead": "What the KDU Developer Community collects when you use the form, when you have "
+                "a member account, or when you sign up for an event, who can see it, and how to "
+                "have it deleted.",
         "show_version": True, "version": "Version 2", "reviewed_on": date(2026, 9, 17),
         "intro": "This covers this website, the form on it, and member accounts. It is written "
                  "to be read rather than to protect us. If anything here is unclear, ask, "
@@ -135,10 +136,11 @@ PAGES = [
              "The areas of interest you tick\n"
              "Your message\n"
              "That you agreed to be contacted, and that you accepted the rules, terms and this notice"),
-            ("account", "2. If you create an account",
-             "An account is optional. You can send the form, apply, and get a reply without "
-             "one.\n\n"
-             "If you do create one, we additionally hold your password, whether you have "
+            ("account", "2. Your member account",
+             "You do not create your own account. If you send the form only to ask a question, "
+             "no account is made. When the leadership team accepts you as a member, we create an "
+             "account for you and email you a link to set your own password.\n\n"
+             "Once you have one, we additionally hold your password, whether you have "
              "confirmed your email address, and when you were approved as a member. The "
              "password itself is not stored: what we keep is a salted hash of it, which cannot "
              "be turned back into the password, so nobody here can read it or tell you what it "

@@ -527,21 +527,24 @@ class SiteGuardTests(Base):
 
 
 @override_settings(**TEST_SETTINGS)
-class SignUpStillWorksTests(Base):
+class AcceptWholeWayInTests(Base):
     def test_the_whole_way_in(self):
-        InterestArea.objects.create(name="Programming", order=0)
+        from .services import accept_applications
+
+        application = Application.objects.create(
+            intent=Application.Intent.JOIN, name="New Person", email="new@example.org",
+            student="no", accepted_documents=True, accepted_at=timezone.now(),
+            status=Application.Status.ACCEPTED)
         with self.captureOnCommitCallbacks(execute=True):
-            response = self.client.post(reverse("accounts:signup"), {
-                "display_name": "New Person", "email": "new@example.org", "student": "no",
-                "student_id": "", "password1": PASSWORD, "password2": PASSWORD,
-                "accepted_documents": "on",
-            })
-        self.assertRedirects(response, reverse("accounts:dashboard"))
+            created, approved = accept_applications([application])
+
+        self.assertEqual((created, approved), (1, 0))
         member = Member.objects.get(user__email="new@example.org")
         self.assertEqual(member.handle, "new-person")
         self.assertEqual(member.profile_visibility, Member.Visibility.HIDDEN,
                          "nobody is listed without choosing to be")
-        self.assertIsNone(member.approved_at)
+        self.assertEqual(member.status, Member.Status.ACTIVE)
+        self.assertTrue(member.is_verified, "the team vouched; the link only reaches them")
         self.assertLess(member.accepted_at, timezone.now())
 
 
