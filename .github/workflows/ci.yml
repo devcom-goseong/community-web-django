@@ -10,12 +10,68 @@ on:
   pull_request:
   workflow_dispatch:
 
+# The pipeline is one job per stage, chained with `needs:`, so the run's graph
+# reads left to right as 1 -> 2 -> 3 -> 4 -> 5. Steps inside a job are not drawn
+# as nodes; only jobs are, which is why each stage is its own job.
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
+  # Django settings for the check and test stages. Long and varied so
+  # `check --deploy` exercises the real rule rather than tripping over the key
+  # itself. Not used anywhere real. DATABASE_URL is left to default to SQLite
+  # here and only overridden with Postgres in the test stage that needs it.
+  DJANGO_SECRET_KEY: ci-oNly-3f8Kq2Wm7ZbP1xLr9TvJc4YsHd6Ng0Ae5UiRk8Qz-not-a-real-secret
+  DJANGO_DEBUG: "0"
+  DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+  # CI checks the settings module's production posture. In the real deployment
+  # nginx does the redirect instead, which is why the compose file turns this
+  # off there.
+  DJANGO_SECURE_SSL_REDIRECT: "1"
+  DJANGO_LOCMEM_CACHE: "1"
+  DJANGO_EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+  # A real-looking address, so the deploy check that catches a localhost
+  # APP_URL passes here and still fails a production misconfiguration.
+  APP_URL: https://community.example.org
 
 jobs:
+  # 1 ── Lint ────────────────────────────────────────────────────────────────
+  lint:
+    name: 1 · Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install
+        run: pip install -r requirements-dev.txt
+      - name: Ruff
+        run: ruff check .
+
+  # 2 ── Django checks (settings posture + migrations in sync) ────────────────
+  checks:
+    name: 2 · Django checks
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install
+        run: pip install -r requirements-dev.txt
+      - name: Django system checks, including the deployment ones
+        run: python manage.py check --deploy --fail-level WARNING
+      - name: Confirm no model change is missing a migration
+        run: python manage.py makemigrations --check --dry-run
+
+  # 3 ── Test (against Postgres, like production) ─────────────────────────────
   test:
-    name: Lint and test
+    name: 3 · Test
+    needs: checks
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -30,65 +86,36 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
-
     env:
-      # Long and varied so `check --deploy` exercises the real rule rather
-      # than tripping over the key itself. Not used anywhere real.
-      DJANGO_SECRET_KEY: ci-oNly-3f8Kq2Wm7ZbP1xLr9TvJc4YsHd6Ng0Ae5UiRk8Qz-not-a-real-secret
-      DJANGO_DEBUG: "0"
-      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
-      # CI checks the settings module's production posture. In the real
-      # deployment nginx does the redirect instead, which is why the compose
-      # file turns this off there.
-      DJANGO_SECURE_SSL_REDIRECT: "1"
-      DJANGO_LOCMEM_CACHE: "1"
       DATABASE_URL: postgres://kdu:kdu@localhost:5432/kdu_test
-      DJANGO_EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
-      # A real-looking address, so the deploy check that catches a localhost
-      # APP_URL passes here and still fails a production misconfiguration.
-      APP_URL: https://community.example.org
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements-dev.txt
-
       - name: Install
         run: pip install -r requirements-dev.txt
-
-      - name: Lint
-        run: ruff check .
-
-      - name: Django system checks, including the deployment ones
-        run: python manage.py check --deploy --fail-level WARNING
-
-      - name: Confirm no model change is missing a migration
-        run: python manage.py makemigrations --check --dry-run
-
       # Proves the static pipeline works, which the tests deliberately do not
       # depend on. A missing or unreadable asset fails here rather than at
       # image build time.
       - name: Collect static files
         run: python manage.py collectstatic --noinput
-
       - name: Test
         run: python manage.py test --verbosity 2
 
+  # 4 ── Build and publish the image ─────────────────────────────────────────
   # Also runs on a manual dispatch, so the image can be rebuilt on demand and
   # so the build is exercised without having to invent a commit.
   image:
-    name: Build and publish the image
+    name: 4 · Build image
     needs: test
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
     steps:
       - uses: actions/checkout@v4
 
@@ -120,8 +147,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # 5 ── Deploy to the VPS ───────────────────────────────────────────────────
   deploy:
-    name: Deploy to the VPS
+    name: 5 · Deploy
     needs: image
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
