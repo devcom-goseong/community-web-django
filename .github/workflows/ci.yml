@@ -6,7 +6,10 @@ name: CI
 # ever matched and only a manual dispatch ran anything.
 on:
   push:
-    branches: [main]
+    # staging runs the checks too. Only main goes further: building the image
+    # and deploying are gated on refs/heads/main further down, so work on
+    # staging is tested without ever reaching the live site.
+    branches: [main, staging]
   pull_request:
   workflow_dispatch:
 
