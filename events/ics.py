@@ -62,6 +62,8 @@ def calendar_for(event, include_online_link=False):
     url = f"{settings.APP_URL}{event.get_absolute_url()}"
 
     description = [event.summary]
+    if event.presenter:
+        description.append(f"Presented by {event.presenter}")
     if include_online_link and event.online_url:
         description.append(f"Join online: {event.online_url}")
     description.append(url)

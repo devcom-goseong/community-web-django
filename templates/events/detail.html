@@ -21,6 +21,7 @@
       <div class="panel mt-7">
         <dl class="event-facts">
           <div><dt>When</dt><dd>{{ event.starts_at|date:"l j F Y, H:i" }}–{{ event.ends_at|date:"H:i T" }}</dd></div>
+          {% if event.presenter %}<div><dt>Presented by</dt><dd>{{ event.presenter }}</dd></div>{% endif %}
           {% if event.location %}<div><dt>Where</dt><dd>{{ event.location }}</dd></div>{% endif %}
           {% if event.is_online %}
             <div>
@@ -52,16 +53,17 @@
                 <button class="btn btn--ghost btn--plain" type="submit">{% if registration.status == "going" %}I cannot come{% else %}Leave the waiting list{% endif %}</button>
               </form>
             {% endif %}
-          {% elif not block %}
+          {% elif not block_reason %}
             <form method="post" action="{% url 'events:register' event.slug %}">
               {% csrf_token %}
               <button class="btn" type="submit">{% if event.capacity and not spots_left %}Join the waiting list{% else %}Register{% endif %}</button>
             </form>
-          {% elif block == "sign-in" %}
+          {% elif block_reason == "sign-in" %}
             <a class="btn" href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">Sign in to register</a>
             <a class="btn btn--ghost btn--plain" href="{% url 'content:join' %}">Not a member yet?</a>
-          {% elif block != "started" and block != "cancelled" %}
-            <p class="muted">{{ block_message }}</p>
+          {% elif block_reason != "started" and block_reason != "cancelled" %}
+            {# A notice rather than grey small print: this is the answer to "where did the register button go?" #}
+            <p class="flash__item flash__item--warning">{{ block_message }}</p>
           {% endif %}
           {% if not has_ended %}
             <a class="btn btn--ghost btn--plain" href="{% url 'events:calendar' event.slug %}">Add to calendar</a>

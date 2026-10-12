@@ -86,6 +86,12 @@ class Event(models.Model):
         max_length=240, help_text="One or two sentences, shown in the list of events.")
     description = models.TextField(
         blank=True, default="", help_text="Optional. Anything else people should know.")
+    presenter = models.CharField(
+        max_length=120, blank=True, default="",
+        help_text="Who is presenting or leading this one. A plain name rather than a "
+                  "member account, so a guest who has not joined can be named too. "
+                  "Leave it blank when nobody in particular is presenting.",
+    )
 
     starts_at = models.DateTimeField(db_index=True)
     ends_at = models.DateTimeField()
