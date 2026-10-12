@@ -220,14 +220,13 @@ TEAM_NAME = "KDU Developer Community"
 TEAM_INBOX = env("TEAM_INBOX", "") or EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = f"{TEAM_NAME} <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "webmaster@localhost"
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-PUBLIC_SITE_URL = env("PUBLIC_SITE_URL", "https://dev-comm.netlify.app")
 
 # The address this app itself is served on, with scheme and no trailing slash.
 # Links in emails sent from a web request are built from that request; this is
 # for the ones that have no request to build from, like the event reminders a
-# scheduled job sends. It is not PUBLIC_SITE_URL: that is the static site, which
-# does not serve /account/ or /events/ at all. A deploy check warns if it is
-# still pointing at localhost when DEBUG is off.
+# scheduled job sends. It is not the static site, which does not serve
+# /account/ or /events/ at all. A deploy check warns if it is still pointing at
+# localhost when DEBUG is off.
 APP_URL = env("APP_URL", "http://localhost:8000").rstrip("/")
 
 # The token Google Search Console gives for "HTML tag" verification. Set it in
