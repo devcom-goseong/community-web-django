@@ -51,7 +51,7 @@ def read_token(token, max_age=MAX_AGE_SECONDS):
 def _absolute(request, path):
     # From a request, the address the person actually used. Without one — an
     # admin action run in a script, say — this app's own configured address.
-    # Never PUBLIC_SITE_URL: that is the static site, which has no /account/.
+    # Never the static site, which has no /account/.
     if request is not None:
         return request.build_absolute_uri(path)
     return f"{settings.APP_URL}{path}"
