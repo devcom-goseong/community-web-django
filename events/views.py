@@ -92,7 +92,12 @@ def event_detail(request, slug):
         "event": event,
         "registration": registration,
         "has_place": bool(registration and registration.status == Registration.Status.GOING),
-        "block": block,
+        # Not "block": inside {% block content %} Django puts its own `block`
+        # object in the context so {{ block.super }} works, and it shadows
+        # anything of that name passed from here. A template testing it then
+        # sees a truthy object instead of this, which is how the registration
+        # control came to be missing from the page for everybody.
+        "block_reason": block,
         "block_message": services.MESSAGES.get(block, "") if block else "",
         "named_attendees": named,
         "unnamed_attendees": unnamed,

@@ -663,3 +663,77 @@ class PresenterTests(Base):
         event = make_event(presenter="A visitor from another university")
         self.assertContains(
             self.client.get(event.get_absolute_url()), "A visitor from another university")
+
+
+@override_settings(**TEST_SETTINGS)
+class BlockedRegistrationIsVisibleTests(Base):
+    """When you cannot register, the page has to say so where you will see it.
+
+    A leadership account has no member row, so it cannot hold a place. The
+    explanation used to be rendered as small grey text and was read as "the
+    registration link is broken".
+    """
+
+    def test_a_staff_account_without_a_member_row_is_told_why(self):
+        event = make_event()
+        self.client.force_login(make_staff())
+        page = self.client.get(event.get_absolute_url())
+        self.assertContains(page, "not a member account")
+        self.assertContains(page, "flash__item")
+
+    def test_the_explanation_is_not_small_grey_print(self):
+        event = make_event()
+        self.client.force_login(make_staff())
+        body = self.client.get(event.get_absolute_url()).content.decode()
+        start = body.find("not a member account")
+        self.assertNotIn('class="muted"', body[max(0, start - 200):start])
+
+    def test_a_member_still_gets_the_register_button(self):
+        event = make_event()
+        member = make_member()
+        self.client.force_login(member.user)
+        self.assertContains(self.client.get(event.get_absolute_url()), "Register")
+
+
+@override_settings(**TEST_SETTINGS)
+class RegistrationControlRendersTests(Base):
+    """The register control has to actually appear on the page.
+
+    It did not, for anybody, for as long as the page has existed. The view
+    passed its reason-not-to-register as `block`, and inside {% block content %}
+    Django puts its own object of that name in the context so {{ block.super }}
+    works. The template's `{% elif not block %}` therefore tested Django's
+    object, which is always truthy, and every visitor fell through to the last
+    branch: a member saw an empty box, and a signed-out visitor saw the words
+    "Sign in to register for events." with nothing to click.
+
+    None of the other tests caught it because they all register by posting to
+    the endpoint directly, which was never broken.
+    """
+
+    def test_a_member_sees_a_register_button(self):
+        event = make_event()
+        self.client.force_login(make_member().user)
+        page = self.client.get(event.get_absolute_url())
+        self.assertContains(page, "Register")
+        self.assertContains(page, reverse("events:register", args=[event.slug]))
+
+    def test_a_signed_out_visitor_gets_a_link_not_just_a_sentence(self):
+        event = make_event()
+        page = self.client.get(event.get_absolute_url())
+        self.assertContains(page, "Sign in to register")
+        self.assertContains(page, reverse("accounts:login"))
+        self.assertContains(page, "Not a member yet?")
+
+    def test_a_full_event_offers_the_waiting_list(self):
+        event = make_event(capacity=1)
+        self.register(event, make_member())
+        self.client.force_login(make_member().user)
+        self.assertContains(self.client.get(event.get_absolute_url()),
+                            "Join the waiting list")
+
+    def test_the_context_does_not_use_the_name_django_reserves(self):
+        # If anyone renames this back, the page quietly loses its buttons again.
+        event = make_event()
+        response = self.client.get(event.get_absolute_url())
+        self.assertIn("block_reason", response.context)
