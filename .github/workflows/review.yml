@@ -1,10 +1,9 @@
-# Every pull request has to be approved by the maintainer before it is merged.
+# Every pull request has to be approved by a maintainer before it is merged.
 #
-# This workflow makes that visible: a pull request without the approval shows a
-# failing check. It cannot block the merge button by itself — only the repo
-# owner can do that, by making this check required in the branch protection for
-# main (CONTRIBUTING.md explains how). Until then it is a loud reminder rather
-# than a lock.
+# GitHub's own "require approvals" setting counts any approval. This checks a
+# stricter thing: that the approval came from the maintainer, and that it was
+# given on the commits currently in the pull request. Push more commits after an
+# approval and it goes red again, because the new code has not been read.
 #
 # It re-runs whenever a review is given or dismissed, so the check turns green
 # the moment the approval lands, with nothing to re-run by hand.
