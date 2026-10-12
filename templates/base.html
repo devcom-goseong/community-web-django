@@ -69,7 +69,12 @@
         <li><a class="nav__link" href="{% url 'events:list' %}"{% if nav == 'events' %} aria-current="page"{% endif %}>Events</a></li>
         {% if viewer_can_see_members %}
           <li><a class="nav__link" href="{% url 'members:directory' %}"{% if nav == 'members' %} aria-current="page"{% endif %}>Members</a></li>
-        {% else %}
+        {% elif user.is_authenticated %}
+          {% comment %}
+            "Your first month" is for people who have joined. Showing it to a
+            signed-out visitor gave them a third door next to Sign in and Join,
+            and newcomers could not tell which one was theirs.
+          {% endcomment %}
           <li><a class="nav__link" href="{% url 'content:page' 'start' %}"{% if nav == 'start' %} aria-current="page"{% endif %}>Start here</a></li>
         {% endif %}
         {% if user.is_authenticated %}

@@ -45,17 +45,18 @@ class RegistrationInline(admin.TabularInline):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("title", "starts_local", "status", "visibility", "audience", "places",
+    list_display = ("title", "presenter", "starts_local", "status", "visibility", "audience",
+                    "places",
                     "waiting", "activity")
     list_filter = ("status", "visibility", "audience", "activity")
-    search_fields = ("title", "summary", "location")
+    search_fields = ("title", "summary", "location", "presenter")
     date_hierarchy = "starts_at"
     inlines = (RegistrationInline,)
     actions = ("publish", "cancel_and_notify", "mark_going_as_attended", "export_attendees")
     readonly_fields = ("cancelled_at", "created_by", "created_at", "updated_at")
 
     fieldsets = (
-        (None, {"fields": ("title", "slug", "activity", "summary", "description")}),
+        (None, {"fields": ("title", "slug", "activity", "presenter", "summary", "description")}),
         ("When and where", {
             "fields": ("starts_at", "ends_at", "location", "online_url"),
             "description": "Times are in Korean time (KST). The online link is only ever "

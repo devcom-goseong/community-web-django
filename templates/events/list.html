@@ -23,6 +23,7 @@
                   {% if event.visibility == "members" %}<span class="pill">Members</span>{% endif %}
                   <span class="event-card__meta">
                     {{ event.starts_at|date:"l, H:i T" }}
+                    {% if event.presenter %} &middot; {{ event.presenter }}{% endif %}
                     {% if event.location %} &middot; {{ event.location }}{% elif event.is_online %} &middot; Online{% endif %}
                     {% if event.capacity and not event.is_cancelled %}
                       &middot; {% if event.spots_left %}{{ event.spots_left }} place{{ event.spots_left|pluralize }} left{% else %}Full — waiting list open{% endif %}

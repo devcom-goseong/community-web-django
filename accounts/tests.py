@@ -9,6 +9,7 @@ from applications.models import Application
 from content.models import InterestArea
 
 from .emails import SALT, make_token
+from .factories import make_member
 from .models import Member
 
 UserModel = get_user_model()
@@ -299,3 +300,30 @@ class DashboardTests(TestCase):
         mail.outbox = []
         self.client.post(reverse("accounts:resend_verification"))
         self.assertEqual(len(mail.outbox), 0)
+
+
+@override_settings(**TEST_SETTINGS)
+class NewcomerNavigationTests(TestCase):
+    """A signed-out visitor should have two doors, not three.
+
+    "Start here" is the page called "Your first month" — it is written for
+    people who have already joined. Beside "Sign in" and "Join" it read as a
+    third way in, and newcomers could not tell which one was theirs.
+    """
+
+    def test_a_signed_out_visitor_is_not_offered_start_here(self):
+        page = self.client.get("/")
+        self.assertNotContains(page, "Start here")
+        self.assertContains(page, "Sign in")
+        self.assertContains(page, "Join")
+
+    def test_someone_who_has_joined_still_gets_it(self):
+        self.client.force_login(make_member("pending").user)
+        self.assertContains(self.client.get("/"), "Start here")
+
+    def test_no_stray_template_comment_reaches_the_page(self):
+        # {# #} does not span lines in Django; a multi-line one renders as text.
+        body = self.client.get("/").content.decode()
+        self.assertNotIn("{#", body)
+        self.assertNotIn("{% comment", body)
+        self.assertNotIn("Your first month\" is for people", body)
