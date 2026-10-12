@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Too many attempts — {{ site.community_name }}{% endblock %}
+
+{% block content %}
+  <section class="section">
+    <div class="wrap wrap--narrow">
+      <h1 class="page-head__title">That is enough tries for now</h1>
+      <p class="lead mt-5">Too many sign-in attempts have come from here. Wait about {{ minutes }} minutes and try again.</p>
+      <p class="mt-5">If you have forgotten your password, the reset link still works.</p>
+      <div class="panel__actions mt-7">
+        <a class="btn" href="{% url 'accounts:password_reset' %}">Set a new password</a>
+        <a class="btn btn--ghost btn--plain" href="{% url 'content:home' %}">Home</a>
+      </div>
+    </div>
+  </section>
+{% endblock %}

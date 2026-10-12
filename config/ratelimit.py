@@ -74,3 +74,105 @@ def rate_limited(request, scope="form", limit=None, window=None):
         log.exception("rate limiter unavailable; allowing the request")
         return False
     return hits > limit
+
+
+# --- failed sign-ins --------------------------------------------------------
+#
+# The limiter above counts requests, which is right for a form anyone may send
+# once but wrong for a sign-in page: a member who signs in correctly on their
+# phone and then on their laptop has done nothing wrong, and shutting them out
+# for it would be our mistake, not theirs. So the sign-in pages count only
+# failures, and getting the password right clears the count.
+#
+# Two counters run at once, because they stop different things:
+#
+#   by connection   one host trying many passwords. This is the ordinary case
+#                   and what the server actually sees all day.
+#   by account      many hosts trying one account. A per-connection limit can
+#                   never catch that, because every host stays under it.
+#
+# The second one has a cost worth writing down. Someone who knows a member's
+# email address can keep that address locked for the length of the window by
+# failing on purpose. Against that: the limit is set high enough that a person
+# fumbling their own password will not reach it, the lock lasts minutes rather
+# than for ever, and a member who is locked out can still set a new password
+# through the emailed reset link. Leaving one known address open to thousands
+# of guesses is the worse of the two.
+#
+# A third counter is used only by the Vault, which has one shared password
+# instead of accounts. There the two counters above are not enough: a thousand
+# hosts trying ten passwords each stays under both. So the Vault also counts
+# every failure together, whatever it came from.
+
+
+def _fail_key(scope, kind, value):
+    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()[:32]
+    return f"signinfail:{scope}:{kind}:{digest}"
+
+
+def _failures(key):
+    try:
+        return cache.get(key, 0) or 0
+    except Exception:  # same rule as above: a broken cache locks nobody out
+        log.exception("cache unavailable; not counting failed sign-ins")
+        return 0
+
+
+def _bump(key, window):
+    try:
+        cache.get_or_set(key, 0, window)
+        return cache.incr(key)
+    except ValueError:  # it expired between those two calls
+        cache.set(key, 1, window)
+        return 1
+    except Exception:
+        log.exception("cache unavailable; a failed sign-in went uncounted")
+        return 0
+
+
+def sign_in_blocked(request, scope, account="", shared=False):
+    """Why this attempt should be refused, or "" to let it through.
+
+    The reason is a word for the log. Nothing here says which part of the
+    password was wrong, or whether the account exists, because the caller
+    refuses the attempt before the password is looked at.
+    """
+    ip = client_ip(request)
+    if ip and _failures(_fail_key(scope, "from", ip)) >= settings.LOGIN_FAIL_MAX:
+        return "connection"
+    if account and _failures(_fail_key(scope, "for", account)) >= settings.LOGIN_FAIL_ACCOUNT_MAX:
+        return "account"
+    if shared and _failures(_fail_key(scope, "all", "")) >= settings.LOGIN_FAIL_SHARED_MAX:
+        return "shared password"
+    return ""
+
+
+def record_sign_in_failure(request, scope, account="", shared=False):
+    """Remember that a password was wrong."""
+    window = settings.LOGIN_FAIL_WINDOW_SECONDS
+    ip = client_ip(request)
+    if ip:
+        _bump(_fail_key(scope, "from", ip), window)
+    if account:
+        _bump(_fail_key(scope, "for", account), window)
+    if shared:
+        _bump(_fail_key(scope, "all", ""), window)
+
+
+def clear_sign_in_failures(request, scope, account=""):
+    """Forget the failures of whoever just got in.
+
+    The shared counter is deliberately left alone. It is there to notice a
+    flood against one password from many places, and one success in the middle
+    of a flood does not mean the flood has stopped.
+    """
+    ip = client_ip(request)
+    keys = [_fail_key(scope, "from", ip)] if ip else []
+    if account:
+        keys.append(_fail_key(scope, "for", account))
+    if not keys:
+        return
+    try:
+        cache.delete_many(keys)
+    except Exception:
+        log.exception("cache unavailable; failed sign-ins were not cleared")

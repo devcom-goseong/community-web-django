@@ -201,6 +201,22 @@ connection. It trusts the address nginx saw (`X-Real-IP`), not the first entry
 of `X-Forwarded-For`: that entry is written by the client, and an earlier
 version that read it could be bypassed by sending a made-up header.
 
+The three pages that take a password — the member sign-in, the Django admin and
+the Vault — stop answering once they are being guessed at. That is one
+middleware, `config/login_throttle.py`, rather than a check in each view,
+because the admin's sign-in is Django's own; it finds the pages by URL name, so
+moving the admin does not quietly switch the protection off. It counts
+*failures*, never requests, so signing in correctly as often as you like costs
+nothing, and getting the password right clears what went before. Three counters
+run at once: per connection (one host trying many passwords), per account (many
+hosts trying one account, which no per-connection limit can see), and, for the
+Vault alone, every failure together — one shared password has no accounts to
+count against. The limits are settings, so they can be changed without a
+deployment. The trade-off in the per-account counter is written down in
+`config/ratelimit.py`: someone who knows an address can keep it locked for the
+length of the window, which is why that limit is the loosest of the three and
+why the refusal page still offers the password reset link.
+
 ---
 
 ## Marketing pitches are refused
@@ -336,6 +352,12 @@ About 150 tests, which run in a few seconds.
   files, including folding Korean text; the spreadsheet export; and the
   reminder job sending once, skipping what it should and retrying failures.
 - **The rate limiter:** that a made-up `X-Forwarded-For` header does not reset it.
+- **The sign-in limits:** that a wrong password stops being answered, on all
+  three password pages; that the right password is never held against anyone,
+  however often it is used; that getting in clears what went before; that one
+  account can be defended from many addresses at once without locking anybody
+  else out; that the Vault counts every failure together; and that the three
+  counters are separate.
 - **The content:** every page renders from the database, unpublishing removes a
   page and returns a 404, and re-running the seed does not duplicate anything.
 
@@ -464,7 +486,8 @@ browser will block the request.
 | `events/ics.py` | Calendar files |
 | `events/management/commands/send_event_reminders.py` | The reminder job |
 | `content/context_processors.py` | Where members-only invite links are withheld, for every page |
-| `config/ratelimit.py` | The shared rate limiter |
+| `config/ratelimit.py` | The shared rate limiter, and the failed sign-in counters |
+| `config/login_throttle.py` | Where a password page stops answering guesses |
 | `accounts/backends.py` | Signing in with an email address rather than a username |
 | `accounts/forms.py` | Sign-in and profile forms, in the site's own markup |
 | `accounts/services.py` | Accepting a join application: creates or approves the account and sends the set-a-password invite |

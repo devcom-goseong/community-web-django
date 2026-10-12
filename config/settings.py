@@ -80,6 +80,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Last, so it sits closest to the views and sees what they answered.
+    "config.login_throttle.SignInThrottle",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -253,6 +255,24 @@ UNBLOCKED_TERMS = env_list("UNBLOCKED_TERMS")
 
 RATE_LIMIT_MAX = int(env("RATE_LIMIT_MAX", "5"))
 RATE_LIMIT_WINDOW_SECONDS = int(env("RATE_LIMIT_WINDOW_SECONDS", "600"))
+
+# --- Failed sign-ins ------------------------------------------------------
+# How many wrong passwords the sign-in pages will answer before refusing for a
+# while. These count failures only, so signing in correctly as often as you
+# like costs nothing. config/login_throttle.py explains the three counters.
+#
+# Eight from one connection is more than a person needs and far less than a
+# script wants. Twenty against one account is high on purpose: anyone can send
+# wrong passwords for an address they know, and the lower the number, the
+# easier it is to keep a real member out.
+LOGIN_FAIL_MAX = int(env("LOGIN_FAIL_MAX", "8"))
+LOGIN_FAIL_ACCOUNT_MAX = int(env("LOGIN_FAIL_ACCOUNT_MAX", "20"))
+# The Vault only. One shared password has no accounts to count against, so
+# every failure against it counts together, however many places they come
+# from. If this is ever reached the Django admin still works, so the
+# leadership team is not shut out of everything by a flood.
+LOGIN_FAIL_SHARED_MAX = int(env("LOGIN_FAIL_SHARED_MAX", "40"))
+LOGIN_FAIL_WINDOW_SECONDS = int(env("LOGIN_FAIL_WINDOW_SECONDS", "900"))
 
 # --- Events ---------------------------------------------------------------
 # How far ahead of an event the reminder goes out. The reminder job runs once

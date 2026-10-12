@@ -15,6 +15,7 @@ lives only in the server environment, never in the code.
 """
 
 import functools
+import secrets
 
 from django.conf import settings
 from django.contrib import admin, messages
@@ -66,7 +67,14 @@ def unlock(request):
         return redirect("vault:dashboard")
     error = ""
     if request.method == "POST":
-        if settings.VAULT_PASSWORD and request.POST.get("password", "") == settings.VAULT_PASSWORD:
+        # compare_digest rather than ==, which returns as soon as two
+        # characters differ and so takes a measurably different time for a
+        # guess that shares the first few characters with the real password.
+        # Both sides are encoded because compare_digest refuses strings that
+        # are not pure ASCII.
+        given = request.POST.get("password", "")
+        if settings.VAULT_PASSWORD and secrets.compare_digest(
+                given.encode("utf-8"), settings.VAULT_PASSWORD.encode("utf-8")):
             request.session[SESSION_KEY] = True
             request.session.set_expiry(60 * 60 * 12)  # 12 hours
             return redirect(request.session.pop(NEXT_KEY, None) or "vault:dashboard")
