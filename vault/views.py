@@ -15,6 +15,7 @@ lives only in the server environment, never in the code.
 """
 
 import functools
+import secrets
 
 from django.conf import settings
 from django.contrib import admin, messages
@@ -24,6 +25,9 @@ from django.db.models import Q
 from django.forms import modelform_factory
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+
+from config.login_throttle import VAULT
+from config.ratelimit import clear_sign_in_failures, record_sign_in_failure
 
 SESSION_KEY = "vault_ok"
 NEXT_KEY = "vault_next"
@@ -66,10 +70,21 @@ def unlock(request):
         return redirect("vault:dashboard")
     error = ""
     if request.method == "POST":
-        if settings.VAULT_PASSWORD and request.POST.get("password", "") == settings.VAULT_PASSWORD:
+        # compare_digest rather than ==, which returns as soon as two
+        # characters differ and so takes a measurably different time for a
+        # guess that shares the first few characters with the real password.
+        # Both sides are encoded because compare_digest refuses strings that
+        # are not pure ASCII.
+        given = request.POST.get("password", "")
+        if settings.VAULT_PASSWORD and secrets.compare_digest(
+                given.encode("utf-8"), settings.VAULT_PASSWORD.encode("utf-8")):
+            # This is not Django's auth, so there is no user_logged_in signal
+            # for config/login_throttle.py to hear. It is told here instead.
+            clear_sign_in_failures(request, VAULT)
             request.session[SESSION_KEY] = True
             request.session.set_expiry(60 * 60 * 12)  # 12 hours
             return redirect(request.session.pop(NEXT_KEY, None) or "vault:dashboard")
+        record_sign_in_failure(request, VAULT, shared=True)
         error = "That is not the vault password."
     return render(request, "vault/unlock.html", {"error": error})
 
