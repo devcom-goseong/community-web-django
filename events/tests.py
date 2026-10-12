@@ -633,3 +633,33 @@ class ChangesAndLeaksTests(Base):
 
         self.client.force_login(make_member("member").user)
         self.assertContains(self.client.get(member.get_absolute_url()), "Private strategy night")
+
+
+@override_settings(**TEST_SETTINGS)
+class PresenterTests(Base):
+    """Who is presenting, which is the thing people ask about a weekly meeting."""
+
+    def test_the_presenter_is_shown_on_the_event_page(self):
+        event = make_event(presenter="Grace Wanjiru")
+        self.assertContains(self.client.get(event.get_absolute_url()), "Grace Wanjiru")
+
+    def test_the_presenter_is_shown_in_the_list(self):
+        make_event(presenter="Grace Wanjiru")
+        self.assertContains(self.client.get(reverse("events:list")), "Grace Wanjiru")
+
+    def test_an_event_with_nobody_presenting_says_nothing_about_it(self):
+        event = make_event()
+        page = self.client.get(event.get_absolute_url())
+        self.assertNotContains(page, "Presented by")
+
+    def test_the_presenter_is_in_the_calendar_file(self):
+        # So the name is there in somebody's own calendar, not only on the site.
+        event = make_event(presenter="Grace Wanjiru")
+        body = self.client.get(reverse("events:calendar", args=[event.slug])).content.decode()
+        self.assertIn("Presented by Grace Wanjiru", body)
+
+    def test_a_guest_who_is_not_a_member_can_be_named(self):
+        # The field is a plain name on purpose: a visiting speaker has no account.
+        event = make_event(presenter="A visitor from another university")
+        self.assertContains(
+            self.client.get(event.get_absolute_url()), "A visitor from another university")

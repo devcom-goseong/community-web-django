@@ -21,6 +21,7 @@
       <div class="panel mt-7">
         <dl class="event-facts">
           <div><dt>When</dt><dd>{{ event.starts_at|date:"l j F Y, H:i" }}–{{ event.ends_at|date:"H:i T" }}</dd></div>
+          {% if event.presenter %}<div><dt>Presented by</dt><dd>{{ event.presenter }}</dd></div>{% endif %}
           {% if event.location %}<div><dt>Where</dt><dd>{{ event.location }}</dd></div>{% endif %}
           {% if event.is_online %}
             <div>
