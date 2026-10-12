@@ -26,6 +26,9 @@ from django.forms import modelform_factory
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
+from config.login_throttle import VAULT
+from config.ratelimit import clear_sign_in_failures, record_sign_in_failure
+
 SESSION_KEY = "vault_ok"
 NEXT_KEY = "vault_next"
 # Kept in the Django admin, not here: creating or editing these safely means
@@ -75,9 +78,13 @@ def unlock(request):
         given = request.POST.get("password", "")
         if settings.VAULT_PASSWORD and secrets.compare_digest(
                 given.encode("utf-8"), settings.VAULT_PASSWORD.encode("utf-8")):
+            # This is not Django's auth, so there is no user_logged_in signal
+            # for config/login_throttle.py to hear. It is told here instead.
+            clear_sign_in_failures(request, VAULT)
             request.session[SESSION_KEY] = True
             request.session.set_expiry(60 * 60 * 12)  # 12 hours
             return redirect(request.session.pop(NEXT_KEY, None) or "vault:dashboard")
+        record_sign_in_failure(request, VAULT, shared=True)
         error = "That is not the vault password."
     return render(request, "vault/unlock.html", {"error": error})
 
