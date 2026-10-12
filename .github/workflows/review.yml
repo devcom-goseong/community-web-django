@@ -1,0 +1,72 @@
+# Every pull request has to be approved by the maintainer before it is merged.
+#
+# This workflow makes that visible: a pull request without the approval shows a
+# failing check. It cannot block the merge button by itself — only the repo
+# owner can do that, by making this check required in the branch protection for
+# main (CONTRIBUTING.md explains how). Until then it is a loud reminder rather
+# than a lock.
+#
+# It re-runs whenever a review is given or dismissed, so the check turns green
+# the moment the approval lands, with nothing to re-run by hand.
+
+name: Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  approved:
+    # Keep this name stable: it is what gets ticked in branch protection.
+    name: Approved by the maintainer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Look for an approving review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAINTAINER: meshtirop1
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          set -euo pipefail
+
+          # GitHub does not let anyone approve their own pull request, so the
+          # maintainer's own work would deadlock here. It is theirs already.
+          if [ "$AUTHOR" = "$MAINTAINER" ]; then
+            echo "::notice::Opened by $MAINTAINER, so no separate approval is needed."
+            exit 0
+          fi
+
+          # --paginate prints one JSON array per page, so the pages are slurped
+          # back into a single array before anything is picked out of it.
+          reviews=$(gh api "repos/$REPO/pulls/$PR/reviews" --paginate | jq -s 'add // []')
+
+          # The effective review is the maintainer's most recent one that is not
+          # a plain comment: an approval can be followed by a request for
+          # changes, and the later one is what counts.
+          review=$(echo "$reviews" | jq -c --arg who "$MAINTAINER" \
+            '[.[] | select(.user.login == $who) | select(.state != "COMMENTED")] | last // {}')
+          state=$(echo "$review" | jq -r '.state // "NONE"')
+          reviewed_sha=$(echo "$review" | jq -r '.commit_id // ""')
+
+          if [ "$state" != "APPROVED" ]; then
+            echo "::error::This pull request needs a review from $MAINTAINER before it can be merged (current state: $state)."
+            exit 1
+          fi
+
+          # An approval covers the commits it was given on. New commits since
+          # then have not been looked at, so ask for another look.
+          if [ "$reviewed_sha" != "$HEAD_SHA" ]; then
+            echo "::error::$MAINTAINER approved an earlier version of this branch (${reviewed_sha:0:7}), and there are newer commits (${HEAD_SHA:0:7}). Please ask for another review."
+            exit 1
+          fi
+
+          echo "::notice::Approved by $MAINTAINER on ${HEAD_SHA:0:7}."

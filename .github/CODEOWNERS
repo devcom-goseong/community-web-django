@@ -1,0 +1,8 @@
+# Every file in this repository is owned by the maintainer, so GitHub asks for
+# their review on every pull request automatically.
+#
+# On its own this only *requests* the review. It becomes a rule once the repo
+# owner turns on branch protection for main with "Require review from Code
+# Owners" — see CONTRIBUTING.md.
+
+* @meshtirop1
