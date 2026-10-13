@@ -156,6 +156,11 @@ jobs:
     needs: image
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    # The credentials are environment secrets, and a job only sees those if it
+    # names the environment. Naming it also brings the environment's protection
+    # rule into play: this one needs a human to approve the deployment, so a
+    # merge reaches the live site when somebody says so, not a moment earlier.
+    environment: VPS_HOST
     steps:
       - name: Check the deploy secrets are present
         id: secrets

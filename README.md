@@ -445,7 +445,12 @@ while releasing nothing, and twice people believed a merge had reached the live
 site when it had not. If releases here are meant to be manual, delete the job
 rather than letting it report a success it did not earn.
 
-Set these in Settings → Secrets and variables → Actions:
+These live as **environment secrets** on the environment the deploy job names,
+not as repository secrets, so the job can only reach them by declaring that
+environment. The environment also carries a protection rule: a deployment
+waits for a named reviewer to approve it, which is why a merge does not reach
+the live site on its own. Set them under Settings → Environments → the
+environment → Environment secrets:
 
 | Secret | What it is |
 | --- | --- |
