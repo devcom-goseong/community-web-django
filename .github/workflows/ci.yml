@@ -156,21 +156,32 @@ jobs:
     needs: image
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
-    # Skips cleanly until the four secrets below exist, so the workflow is
-    # green from the first push rather than red until someone sets up a server.
     steps:
       - name: Check the deploy secrets are present
         id: secrets
         run: |
-          if [ -n "${{ secrets.VPS_HOST }}" ] && [ -n "${{ secrets.VPS_USER }}" ] \
-             && [ -n "${{ secrets.VPS_SSH_KEY }}" ] && [ -n "${{ secrets.VPS_APP_DIR }}" ]; then
+          if [ -n "${{ secrets.VPS_HOST }}" ] && [ -n "${{ secrets.VPS_USER }}" ]              && [ -n "${{ secrets.VPS_SSH_KEY }}" ] && [ -n "${{ secrets.VPS_APP_DIR }}" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No VPS secrets set, so nothing was deployed. The image was still built and pushed. See README.md."
           fi
 
-      - name: Pull the new image and restart
+      # This job used to print a notice here and finish green. It was green for
+      # weeks while deploying nothing, and twice people believed a merge had
+      # reached the live site when it had not. A check that cannot fail is
+      # decoration, so now it fails.
+      - name: Refuse to look deployed when nothing was deployed
+        if: steps.secrets.outputs.ready != 'true'
+        run: |
+          echo "::error::No deploy credentials, so main was built and tested but not released."
+          echo "Set VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_APP_DIR and APP_HOST,"
+          echo "or delete this job if releases are meant to be manual."
+          exit 1
+
+      # The site runs as a gunicorn systemd unit from a checkout on the server,
+      # not as a container. The image above is published for anyone who wants
+      # it, but pulling it here would deploy a stack that does not exist.
+      - name: Pull main and restart the service
         if: steps.secrets.outputs.ready == 'true'
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -181,12 +192,15 @@ jobs:
           script: |
             set -euo pipefail
             cd "${{ secrets.VPS_APP_DIR }}"
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-            docker compose -f docker-compose.prod.yml pull web
-            docker compose -f docker-compose.prod.yml up -d
-            docker image prune -f
+            cp db.sqlite3 "db.sqlite3.bak-$(date +%Y%m%d-%H%M%S)"
+            git pull --ff-only origin main
+            set -a; . ./env; set +a
+            .venv/bin/python manage.py migrate --noinput
+            .venv/bin/python manage.py collectstatic --noinput
+            sudo systemctl restart kdu
+            sudo systemctl is-active kdu
 
-      - name: Confirm the service came back
+      - name: Confirm the site answers
         if: steps.secrets.outputs.ready == 'true'
         run: |
           for attempt in $(seq 1 10); do
