@@ -431,19 +431,33 @@ Tests use a fast password hasher; nothing outside `manage.py test` does.
 3. **Build and publish** the image to
    `ghcr.io/devcom-goseong/community-web-django`, tagged `latest` and by commit
    SHA.
-4. **Deploy** over SSH: pull, `up -d`, prune, then poll `/healthz` ten times
-   and fail the run if the service does not come back.
+4. **Deploy** over SSH: back up the database, `git pull`, migrate, collect the
+   static files, restart the service, then poll `/healthz` ten times and fail
+   the run if the site does not come back.
 
-The deploy job **skips cleanly until the secrets exist**, so the workflow is
-green from the first push rather than red until somebody buys a server. Set
-these in Settings → Secrets and variables → Actions:
+The site runs as a gunicorn systemd unit from a checkout on the server, not as
+a container. The image in step 3 is published for anyone who wants to run it
+that way; the deploy does not use it.
+
+**The deploy job fails when the secrets are missing.** It used to print a
+notice and finish green, which meant the pipeline reported success for weeks
+while releasing nothing, and twice people believed a merge had reached the live
+site when it had not. If releases here are meant to be manual, delete the job
+rather than letting it report a success it did not earn.
+
+These live as **environment secrets** on the environment the deploy job names,
+not as repository secrets, so the job can only reach them by declaring that
+environment. The environment also carries a protection rule: a deployment
+waits for a named reviewer to approve it, which is why a merge does not reach
+the live site on its own. Set them under Settings → Environments → the
+environment → Environment secrets:
 
 | Secret | What it is |
 | --- | --- |
 | `VPS_HOST` | Hostname or IP of the server |
-| `VPS_USER` | SSH user |
+| `VPS_USER` | SSH user. Give it sudo for `systemctl restart kdu` only, not a root login |
 | `VPS_SSH_KEY` | Private key for that user. Use a key made for this, not a personal one |
-| `VPS_APP_DIR` | Directory on the server holding `docker-compose.prod.yml` |
+| `VPS_APP_DIR` | The checkout on the server, e.g. `/home/deploy/sites/kdu` |
 | `VPS_PORT` | Optional, defaults to 22 |
 | `APP_HOST` | Public hostname, used for the post-deploy health check |
 
