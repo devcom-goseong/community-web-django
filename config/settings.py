@@ -21,6 +21,38 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _read_env_file(path=None):
+    """Load BASE_DIR/.env into the environment, if it is there.
+
+    The error below tells people to copy .env.example to .env, and until this
+    existed nothing read the file, so they did exactly as they were told and
+    the app still refused to start. Running from an IDE made it worse: a run
+    configuration has no shell to have sourced anything.
+
+    Real environment variables win. In production systemd supplies them through
+    EnvironmentFile and there is no .env on the server, so this does nothing
+    there. No dependency: the format is KEY=value, which does not need one.
+    """
+    path = path or BASE_DIR / ".env"
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, _, value = line.partition("=")
+        name = name.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        os.environ.setdefault(name, value)
+
+
+_read_env_file()
+
+
 def env(name, default=None, required=False):
     value = os.environ.get(name, default)
     if required and not value:
