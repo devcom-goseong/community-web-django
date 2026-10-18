@@ -52,6 +52,13 @@ class Member(models.Model):
         PAUSED = "paused", "Paused"
         REMOVED = "removed", "Removed"
 
+    class Role(models.TextChoices):
+        # Only the leadership team sets this. It is deliberately not on the
+        # member's own edit form, because a community where people can appoint
+        # themselves professor is not a community with professors in it.
+        MEMBER = "member", "Member"
+        PROFESSOR = "professor", "Professor"
+
     class Visibility(models.TextChoices):
         # The leadership team can see every profile whatever this says, so they
         # can look after the community. The label says so, rather than letting
@@ -106,6 +113,12 @@ class Member(models.Model):
     # but is not treated as a real member anywhere else.
     email_verified_at = models.DateTimeField(null=True, blank=True)
 
+    role = models.CharField(
+        max_length=12, choices=Role.choices, default=Role.MEMBER, db_index=True,
+        help_text="Set by the leadership team. A professor is shown differently "
+                  "in the directory and on their own profile. It changes nothing "
+                  "about what they can do on the site.",
+    )
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.PENDING, db_index=True
     )
@@ -161,6 +174,10 @@ class Member(models.Model):
     @property
     def is_active_member(self):
         return self.is_verified and self.status == self.Status.ACTIVE
+
+    @property
+    def is_professor(self):
+        return self.role == self.Role.PROFESSOR
 
     @property
     def is_listed(self):
