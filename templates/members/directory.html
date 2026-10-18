@@ -21,10 +21,10 @@
         <ul class="member-grid">
           {% for person in page.object_list %}
             <li>
-              <a class="member-card" href="{{ person.get_absolute_url }}">
-                <span class="avatar" aria-hidden="true">{{ person.initials }}</span>
+              <a class="member-card{% if person.is_professor %} member-card--professor{% endif %}" href="{{ person.get_absolute_url }}">
+                <span class="avatar{% if person.is_professor %} avatar--professor{% endif %}" aria-hidden="true">{{ person.initials }}</span>
                 <span class="member-card__body">
-                  <span class="member-card__name">{{ person.display_name }}</span>
+                  <span class="member-card__name">{{ person.display_name }}{% if person.is_professor %} <span class="pill pill--professor">Professor</span>{% endif %}</span>
                   <span class="member-card__handle">@{{ person.handle }}</span>
                   {% if person.bio %}<span class="member-card__bio">{{ person.bio|truncatechars:110 }}</span>{% endif %}
                   {% if person.interests %}

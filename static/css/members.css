@@ -313,3 +313,37 @@
 
 /* --- The home page's "next up" line ----------------------------------------- */
 .hero__next { color: var(--color-text-muted); font-size: var(--fs-small); }
+
+/* --- Professors ---------------------------------------------------------------
+   Set by the leadership team, never by the member. The treatment is deliberately
+   quiet: a darker avatar, a marked card edge and a worded badge. It should read
+   as "this person teaches here", not as a rank above everybody else. */
+.pill--professor {
+  background: var(--color-ink);
+  color: var(--color-on-primary);
+  letter-spacing: 0.01em;
+}
+
+.avatar--professor {
+  background: var(--color-ink);
+  color: var(--color-on-primary);
+}
+
+.member-card--professor {
+  border-color: var(--color-border-strong);
+  border-left: 3px solid var(--color-ink);
+  background: var(--color-surface-alt);
+}
+
+.role-mark {
+  margin: 0 0 var(--space-1);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.profile-head--professor {
+  padding-bottom: var(--space-5);
+  border-bottom: 2px solid var(--color-ink);
+}

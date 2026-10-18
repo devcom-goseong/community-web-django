@@ -96,9 +96,9 @@ class ProjectInline(admin.TabularInline):
 
 @admin.register(Member)
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ("display_name", "handle", "email", "status", "verified",
+    list_display = ("display_name", "handle", "email", "role", "status", "verified",
                     "profile_visibility", "approved_at", "created_at")
-    list_filter = ("status", "profile_visibility", "student", "created_at")
+    list_filter = ("role", "status", "profile_visibility", "student", "created_at")
     search_fields = ("display_name", "handle", "user__email", "student_id")
     readonly_fields = ("user",) + RECORD_FIELDS
     actions = ("approve", "pause", "remove", "hide_profile", "resend_confirmation")
@@ -106,7 +106,10 @@ class MemberAdmin(admin.ModelAdmin):
     inlines = (ProjectInline,)
 
     fieldsets = (
-        (None, {"fields": ("user", "display_name", "handle", "status", "notes")}),
+        (None, {
+            "fields": ("user", "display_name", "handle", "role", "status", "notes"),
+            "description": "Role is how somebody is shown, not what they can do. A professor gets a badge in the directory and on their profile; nothing else changes.",
+        }),
         ("Profile", {
             "fields": ("profile_visibility", "bio", "interests", "github_url", "linkedin_url"),
             "description": "If a profile breaks the community rules, set it to 'Only me' and "

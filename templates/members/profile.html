@@ -3,11 +3,12 @@
 {% block content %}
   <section class="section">
     <div class="wrap wrap--narrow">
-      <div class="profile-head">
-        <span class="avatar avatar--lg" aria-hidden="true">{{ member.initials }}</span>
+      <div class="profile-head{% if member.is_professor %} profile-head--professor{% endif %}">
+        <span class="avatar avatar--lg{% if member.is_professor %} avatar--professor{% endif %}" aria-hidden="true">{{ member.initials }}</span>
         <div>
+          {% if member.is_professor %}<p class="role-mark">Professor</p>{% endif %}
           <h1 class="page-head__title">{{ member.display_name }}</h1>
-          <p class="profile-head__handle">@{{ member.handle }}{% if member.approved_at and member.is_active_member %} &middot; Member since {{ member.approved_at|date:"F Y" }}{% endif %}</p>
+          <p class="profile-head__handle">@{{ member.handle }}{% if member.approved_at and member.is_active_member %} &middot; {% if member.is_professor %}With the community{% else %}Member{% endif %} since {{ member.approved_at|date:"F Y" }}{% endif %}</p>
         </div>
       </div>
 

@@ -579,3 +579,52 @@ class ApplicationPrivacyTests(Base):
 
         impostor.mark_verified()
         self.assertContains(self.client.get(reverse("accounts:dashboard")), "Declined")
+
+
+@override_settings(**TEST_SETTINGS)
+class ProfessorTests(ProfilePostMixin, Base):
+    """Marking somebody a professor is the leadership team's decision.
+
+    It changes how they are shown and nothing else: no extra permissions, no
+    access a member does not already have.
+    """
+
+    def test_a_member_is_an_ordinary_member_by_default(self):
+        self.assertEqual(make_member().role, Member.Role.MEMBER)
+        self.assertFalse(make_member().is_professor)
+
+    def test_a_professor_is_marked_on_their_profile(self):
+        prof = make_member(name="Grace Wanjiru", visibility=Member.Visibility.PUBLIC,
+                           role=Member.Role.PROFESSOR)
+        page = self.client.get(prof.get_absolute_url())
+        self.assertContains(page, "Professor")
+        self.assertContains(page, "profile-head--professor")
+
+    def test_an_ordinary_member_is_not_marked(self):
+        person = make_member(name="Sam Park", visibility=Member.Visibility.PUBLIC)
+        page = self.client.get(person.get_absolute_url())
+        self.assertNotContains(page, "profile-head--professor")
+        self.assertNotContains(page, "pill--professor")
+
+    def test_the_directory_marks_professors(self):
+        make_member(name="Grace Wanjiru", visibility=Member.Visibility.MEMBERS,
+                    role=Member.Role.PROFESSOR)
+        make_member(name="Sam Park", visibility=Member.Visibility.MEMBERS)
+        self.client.force_login(make_member().user)
+        page = self.client.get(reverse("members:directory"))
+        self.assertContains(page, "member-card--professor")
+        self.assertContains(page, "pill--professor")
+
+    def test_a_member_cannot_make_themselves_a_professor(self):
+        # The field is not on their form. Posting it anyway must change nothing.
+        person = make_member(name="Sam Park")
+        self.profile_post(person, role=Member.Role.PROFESSOR)
+        person.refresh_from_db()
+        self.assertEqual(person.role, Member.Role.MEMBER)
+
+    def test_being_a_professor_grants_nothing_extra(self):
+        # A paused professor is still paused. Role is presentation, not access.
+        prof = make_member("paused", visibility=Member.Visibility.MEMBERS,
+                           role=Member.Role.PROFESSOR)
+        self.assertFalse(prof.is_listed)
+        self.assertFalse(prof.is_active_member)
