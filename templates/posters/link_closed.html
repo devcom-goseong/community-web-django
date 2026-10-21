@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% if talk and talk.status != "waiting" %}
+    {% include "partials/page_head.html" with eyebrow="Presenting at the community" heading="This link has already been used" lead="The details for this talk have been sent, so the link has closed. If something needs changing, ask whoever sent it to you for a new one." %}
+  {% elif talk %}
+    {% include "partials/page_head.html" with eyebrow="Presenting at the community" heading="This link has expired" lead="Links for presenters work for a week. Ask whoever sent it to you for a new one." %}
+  {% else %}
+    {% include "partials/page_head.html" with eyebrow="Presenting at the community" heading="This link does not work" lead="Check that the whole link was copied, or ask whoever sent it to you for a new one." %}
+  {% endif %}
+{% endblock %}

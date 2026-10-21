@@ -4,6 +4,7 @@ from django.urls import include, path
 
 from applications.views import health
 from content.sitemaps import SITEMAPS
+from posters.views import staff_file
 
 admin.site.site_header = "KDU Developer Community"
 admin.site.site_title = "KDU Developer Community"
@@ -17,6 +18,9 @@ urlpatterns = [
     path("account/", include("accounts.urls")),
     path("members/", include("accounts.members_urls")),
     path("events/", include("events.urls")),
+    path("present/", include("posters.urls")),
+    # Uploaded files, for the leadership team only (see MEDIA_ROOT).
+    path("media/<path:path>", staff_file, name="staff-file"),
     path("healthz", health, name="health"),
     path("sitemap.xml", sitemap, {"sitemaps": SITEMAPS},
          name="django.contrib.sitemaps.views.sitemap"),

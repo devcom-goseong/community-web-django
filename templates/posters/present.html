@@ -1,0 +1,72 @@
+{% extends "base.html" %}{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/form.css' %}"><link rel="stylesheet" href="{% static 'css/members.css' %}">{% endblock %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Presenting at the community" heading="Your talk" lead="Fill this in once and the poster is made for you. The team checks it before it goes up on the events page." %}
+
+  <section class="section section--flush-top">
+    <div class="wrap wrap--narrow">
+      <div class="panel">
+        <h2 class="panel__title">When and where</h2>
+        <dl class="talk-slot">
+          <div><dt>{{ talk.label }}</dt><dd>{{ start|date:"l j F Y" }}, {{ start|date:"g:i A" }}–{{ end|date:"g:i A T" }}</dd></div>
+          <div><dt>Where</dt><dd>{% if talk.is_online %}Online, on {{ talk.get_platform_display }}{% else %}{{ talk.place }}{% if talk.place_detail %} ({{ talk.place_detail }}){% endif %}{% endif %}</dd></div>
+        </dl>
+        <p class="muted small mt-4">The team set these. If something is wrong, tell whoever sent you this link.</p>
+      </div>
+
+      <form class="form mt-7" method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        {% if form.errors %}
+          <div class="flash__item flash__item--error" role="alert">
+            Some of this needs another look — the fields that need attention are marked below.
+            {% for error in form.non_field_errors %}<br>{{ error }}{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="panel">
+          <h2 class="panel__title">Your talk</h2>
+          <div class="fields">
+            {% include "accounts/_field.html" with field=form.title %}
+            {% include "accounts/_field.html" with field=form.summary %}
+            {% include "accounts/_field.html" with field=form.about %}
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel__title">You</h2>
+          <div class="fields">
+            {% include "accounts/_field.html" with field=form.speaker_name %}
+            {% include "accounts/_field.html" with field=form.speaker_tag %}
+            {% include "accounts/_field.html" with field=form.photo %}
+          </div>
+          <img class="photo-preview mt-4" id="photo-preview" alt="" hidden>
+        </div>
+
+        <p class="muted small">Your photo, your name and these details will be printed on a poster and shown on the event's page once the team approves it. The photo itself is not published separately, and it is stored without the location data phones add to pictures.</p>
+
+        <div class="form__actions mt-5">
+          <button class="btn" type="submit">Send and make my poster</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <script>
+    // Shows the chosen photo in the poster's tall frame, so a presenter sees
+    // the crop before sending. The form works without it.
+    (function () {
+      var input = document.getElementById("{{ form.photo.id_for_label }}");
+      var preview = document.getElementById("photo-preview");
+      if (!input || !preview || !window.URL) return;
+      input.addEventListener("change", function () {
+        var file = input.files && input.files[0];
+        if (!file) { preview.hidden = true; return; }
+        preview.src = URL.createObjectURL(file);
+        preview.hidden = false;
+      });
+    })();
+  </script>
+{% endblock %}

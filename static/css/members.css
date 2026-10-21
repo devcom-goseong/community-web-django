@@ -269,6 +269,41 @@
 .event-facts dt { font-size: var(--fs-micro); color: var(--color-text-muted); }
 .event-facts dd { color: var(--color-heading); }
 
+/* An event with an approved talk poster shows it small, inside the box with the
+   time and place, beside them on a wide screen and under them on a phone. The
+   poster is A4 and tall; the link opens it full size. */
+.event-panel { display: grid; gap: var(--space-5); }
+@media (min-width: 40rem) {
+  .event-panel { grid-template-columns: minmax(0, 1fr) 9rem; align-items: start; }
+}
+.event-poster { margin: 0; width: 9rem; }
+.event-poster img,
+.poster-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+/* The presenter's own copy, on the page they see after sending the form. */
+.poster-preview { margin: 0; max-width: 26rem; }
+.poster-preview img { border-radius: var(--radius); box-shadow: var(--shadow-lg); }
+
+/* The presenter's form: the time and place the team set, and the photo preview. */
+.talk-slot { display: grid; gap: var(--space-2); }
+.talk-slot dt { font-size: var(--fs-micro); color: var(--color-text-muted); }
+.talk-slot dd { margin: 0; color: var(--color-heading); }
+.photo-preview {
+  display: block;
+  width: 9rem;
+  aspect-ratio: 386 / 704;
+  object-fit: cover;
+  object-position: 50% 35%;
+  border-radius: var(--radius);
+  background: var(--color-bg-alt);
+}
+
 .attendees { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 
 .attendees a {

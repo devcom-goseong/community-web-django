@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load static %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/members.css' %}">{% endblock %}
+
+{% block content %}
+  {% include "partials/page_head.html" with eyebrow="Presenting at the community" heading="Thank you, your poster is made" lead="The team will check it and put it on the events page. This link has now closed." %}
+
+  <section class="section section--flush-top">
+    <div class="wrap wrap--narrow">
+      <figure class="poster-preview">
+        <img src="data:image/png;base64,{{ preview }}" width="1240" height="1754" alt="Your poster for {{ talk.title }}">
+        <figcaption class="muted small mt-3">If something needs changing, tell whoever sent you the link. They can fix the text, or send you a new link.</figcaption>
+      </figure>
+    </div>
+  </section>
+{% endblock %}

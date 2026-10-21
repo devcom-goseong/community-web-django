@@ -10,4 +10,5 @@ urlpatterns = [
     path("<slug:slug>/register/", views.event_register, name="register"),
     path("<slug:slug>/cancel/", views.event_cancel, name="cancel"),
     path("<slug:slug>/calendar.ics", views.event_calendar, name="calendar"),
+    path("<slug:slug>/poster.png", views.event_poster, name="poster"),
 ]

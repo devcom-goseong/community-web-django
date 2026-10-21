@@ -28,12 +28,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from config.login_throttle import VAULT
 from config.ratelimit import clear_sign_in_failures, record_sign_in_failure
+from posters.models import TalkPoster
 
 SESSION_KEY = "vault_ok"
 NEXT_KEY = "vault_next"
 # Kept in the Django admin, not here: creating or editing these safely means
 # hashing passwords and handling permissions, which the stock admin already does.
-EXCLUDED = {User, Group}
+# Talk posters too: they need photo uploads, a redraw on every save and the
+# approve step, which only their admin page has.
+EXCLUDED = {User, Group, TalkPoster}
 
 
 def managed():

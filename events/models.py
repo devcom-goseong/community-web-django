@@ -211,6 +211,16 @@ class Event(models.Model):
     def is_online(self):
         return bool(self.online_url)
 
+    def poster(self):
+        """The approved talk poster for this event, or None (see the posters app)."""
+        return self.talk_posters.approved().order_by("-approved_at", "-pk").first()
+
+    def poster_url(self, talk):
+        # The version changes whenever the poster is redrawn, so a browser or a
+        # chat app that kept the old picture fetches the new one.
+        return (f"{reverse('events:poster', args=[self.slug])}"
+                f"?v={int(talk.updated_at.timestamp())}")
+
     def visible_to(self, user):
         if is_staff(user):
             return True

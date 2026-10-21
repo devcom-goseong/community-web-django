@@ -114,6 +114,7 @@ INSTALLED_APPS = [
     "applications",
     "accounts",
     "events",
+    "posters",
     "vault",
 ]
 
@@ -217,6 +218,14 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # They began life in the static site repository; if a change is made to the
 # design in one place it has to be carried to the other by hand.
 STATICFILES_DIRS = [BASE_DIR / "static"]
+# Uploaded files: presenters' photos and the talk posters drawn from them.
+# Nothing in this folder is served straight from disk. The photos are shown
+# only to the leadership team, through the admin, and a poster only through its
+# event's page, which applies that event's visibility. Back it up with the
+# database: a lost poster can be drawn again, a lost photo cannot.
+MEDIA_ROOT = Path(env("DJANGO_MEDIA_ROOT", str(BASE_DIR / "media")))
+MEDIA_URL = "/media/"
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
