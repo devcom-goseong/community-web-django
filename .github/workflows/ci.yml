@@ -199,7 +199,11 @@ jobs:
             cd "${{ secrets.VPS_APP_DIR }}"
             cp db.sqlite3 "db.sqlite3.bak-$(date +%Y%m%d-%H%M%S)"
             git pull --ff-only origin main
-            set -a; . ./env; set +a
+            # Django reads the env file itself, as systemd does for the running
+            # site (see _read_env_file in config/settings.py). Sourcing it in
+            # bash stopped a release: bash ran the words after a space in an
+            # unquoted value as a command.
+            export DJANGO_ENV_FILE="$PWD/env"
             .venv/bin/python manage.py migrate --noinput
             .venv/bin/python manage.py collectstatic --noinput
             sudo systemctl restart kdu

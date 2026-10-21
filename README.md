@@ -435,6 +435,15 @@ Tests use a fast password hasher; nothing outside `manage.py test` does.
    static files, restart the service, then poll `/healthz` ten times and fail
    the run if the site does not come back.
 
+The server's settings live in a file called `env` in the checkout, which
+systemd hands to the service (`EnvironmentFile`). The deploy gives the same
+file to `migrate` and `collectstatic` through `DJANGO_ENV_FILE`, and Django
+reads it the way systemd does: everything after the first `=` is the value,
+spaces included, and quotes around it are dropped. Do not `source` that file in
+a shell. Bash runs the words after a space in an unquoted value as a command,
+and a deploy that did that stopped half-way, after the pull but before the
+restart.
+
 The site runs as a gunicorn systemd unit from a checkout on the server, not as
 a container. The image in step 3 is published for anyone who wants to run it
 that way; the deploy does not use it.

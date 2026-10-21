@@ -21,7 +21,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-def _read_env_file(path=None):
+def _read_env_file(path=None, required=False):
     """Load BASE_DIR/.env into the environment, if it is there.
 
     The error below tells people to copy .env.example to .env, and until this
@@ -32,15 +32,30 @@ def _read_env_file(path=None):
     Real environment variables win. In production systemd supplies them through
     EnvironmentFile and there is no .env on the server, so this does nothing
     there. No dependency: the format is KEY=value, which does not need one.
+
+    DJANGO_ENV_FILE names another file instead. The deploy uses it to hand the
+    server's own env file, the one systemd reads, to the management commands.
+    It used to source that file in bash, and bash and systemd disagree about
+    it: a value with a space and no quotes is one value to systemd, but bash
+    runs everything after the space as a command, which stopped a release
+    half-way. Read here, the commands see what the running site sees. A file
+    named that way must be readable, because migrating without the site's
+    settings is worse than not migrating.
     """
-    path = path or BASE_DIR / ".env"
+    if path is None:
+        named = os.environ.get("DJANGO_ENV_FILE")
+        path = BASE_DIR / named if named else BASE_DIR / ".env"
+        required = required or bool(named)
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except (OSError, UnicodeDecodeError):
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        if required:
+            raise RuntimeError(f"The env file {path} cannot be read: {exc}") from exc
         return
     for line in lines:
         line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
+        # systemd treats ; as a comment as well as #.
+        if not line or line[0] in "#;" or "=" not in line:
             continue
         name, _, value = line.partition("=")
         name = name.strip()
