@@ -1,0 +1,54 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Home</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url 'admin:posters_talkposter_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; <a href="{% url 'admin:posters_talkposter_change' talk.pk %}">{{ talk }}</a>
+  &rsaquo; Approve
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+  <a href="{{ poster_url }}" target="_blank"><img src="{{ poster_url }}" alt="The poster" style="width:340px;border:1px solid #dfe2e7;border-radius:8px"></a>
+
+  <form method="post" style="flex:1;min-width:320px;max-width:560px">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<ul class="errorlist">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+
+    <fieldset class="module aligned">
+      <h2>{{ form.choice.label }}</h2>
+      <div class="form-row">{{ form.choice.errors }}{{ form.choice }}</div>
+    </fieldset>
+
+    <fieldset class="module aligned">
+      <h2>On an event that already exists</h2>
+      <div class="form-row">
+        {{ form.event.errors }}
+        <label for="{{ form.event.id_for_label }}">{{ form.event.label }}:</label> {{ form.event }}
+        <div class="help">{{ form.event.help_text }} If the event has no presenter yet, the speaker's name is added to it.</div>
+      </div>
+    </fieldset>
+
+    <fieldset class="module aligned">
+      <h2>On a new event made from this poster</h2>
+      <div class="form-row">
+        <p>The event gets the poster's title, short description, speaker, date, time and place, and "About the talk" as its description. You can change any of it afterwards.</p>
+      </div>
+      <div class="form-row">{{ form.status.errors }}<label>{{ form.status.label }}:</label> {{ form.status }}</div>
+      <div class="form-row">
+        {{ form.online_url.errors }}
+        <label for="{{ form.online_url.id_for_label }}">{{ form.online_url.label }}:</label> {{ form.online_url }}
+        <div class="help">{{ form.online_url.help_text }}</div>
+      </div>
+    </fieldset>
+
+    <div class="submit-row">
+      <input type="submit" class="default" value="Approve">
+      <a href="{% url 'admin:posters_talkposter_change' talk.pk %}" class="closelink">Not yet</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

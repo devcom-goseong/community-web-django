@@ -164,6 +164,57 @@ anywhere else: those are what send the emails and move the waiting lists.
 - **Times** are entered and shown in Korean time, always labelled KST. Calendar
   files use UTC, so they land at the right local time for anyone, anywhere.
 
+### Talk posters
+
+The poster for each talk used to be collected with a Google Form and laid out by
+hand. Now the site makes it:
+
+1. In the admin, **Talk posters → Add**. Pick the event if it already exists (its
+   date and time are filled in), or set the date and time. Choose where it is:
+   Google Meet, Zoom or Discord (the poster prints the name and "(Virtual)", with
+   a video-call icon or Discord's mark), or in person with the room (a map pin).
+   The label ("Weekly meeting") and the place are yours to set; the presenter
+   cannot change them.
+2. Saving shows a link with a **Copy** button. Send it to the presenter. They do
+   not need an account. The link works once, for 7 days.
+3. The presenter fills in the title, a short description, "About the talk", their
+   name, a few words for the badge under it, and a photo. All of it is required.
+   They see the finished poster straight away.
+4. The team inbox gets the poster as an attachment. It is **not on the site yet**.
+   Open it in the admin, correct any text if needed (the poster is drawn again on
+   save), then **Approve and put it on an event**: an existing event, or a new
+   one made from the poster.
+5. The event's page shows a small copy of the poster inside the box with the time
+   and place; it opens full size, and there is a download link. For a public
+   event it is also the picture a shared link shows in chat apps, and the first
+   image in the event's search-engine data. A new event made from an online
+   poster says "Online, on Zoom" (or Meet, or Discord) as its place; add the call
+   link when you approve it, or later on the event.
+
+*Give the presenter a new link* (on the list) lets them change what they sent;
+their answers are filled in for them. *Take the poster off its event page* undoes
+an approval.
+
+How it is built, and why:
+
+- **Drawn with Pillow** (`posters/render.py`), not a headless browser, so the
+  server needs nothing new installed. The layout copies the hand-made poster;
+  every position is in that poster's units, which is how it was checked. Text
+  that is too long gets smaller, down to a floor, rather than running into the
+  photo. The fonts (Oswald, Poppins, Space Mono, Caveat, all SIL Open Font
+  License) are in `posters/fonts/` with their licences.
+- **Latin letters only.** Those fonts have no Korean, so the form refuses text the
+  poster cannot print, instead of printing empty boxes.
+- **The photo is private.** It is stored upright and re-saved without EXIF, which
+  on a phone photo can include where it was taken. Uploads live in `MEDIA_ROOT`
+  (`media/` by default, or `DJANGO_MEDIA_ROOT`), and nothing there is served
+  from disk: `/media/` answers the leadership team only, and a poster is served
+  through its event (`/events/<slug>/poster.png`), so a members-only event's
+  poster is members-only and an unapproved one is not served at all.
+- **The QR code** points at the link in **Site settings → Talk posters**
+  (`https://discord.gg/kdudev` to begin with). Posters are shared publicly, so that
+  link is public.
+
 ### Reminders
 
 `python manage.py send_event_reminders` emails everyone with a place at an event
@@ -431,9 +482,9 @@ Tests use a fast password hasher; nothing outside `manage.py test` does.
 3. **Build and publish** the image to
    `ghcr.io/devcom-goseong/community-web-django`, tagged `latest` and by commit
    SHA.
-4. **Deploy** over SSH: back up the database, `git pull`, migrate, collect the
-   static files, restart the service, then poll `/healthz` ten times and fail
-   the run if the site does not come back.
+4. **Deploy** over SSH: back up the database, `git pull`, install
+   `requirements.txt`, migrate, collect the static files, restart the service,
+   then poll `/healthz` ten times and fail the run if the site does not come back.
 
 The server's settings live in a file called `env` in the checkout, which
 systemd hands to the service (`EnvironmentFile`). The deploy gives the same
@@ -519,6 +570,9 @@ browser will block the request.
 | `events/models.py` | `Event` and `Registration` |
 | `events/services.py` | Registering, cancelling and the waiting list, under a row lock |
 | `events/ics.py` | Calendar files |
+| `posters/models.py` | `TalkPoster`: the presenter's link, what they sent, and the poster |
+| `posters/render.py` | Draws the poster |
+| `posters/admin.py` | Making links, checking posters, and approving them onto events |
 | `events/management/commands/send_event_reminders.py` | The reminder job |
 | `content/context_processors.py` | Where members-only invite links are withheld, for every page |
 | `config/ratelimit.py` | The shared rate limiter, and the failed sign-in counters |

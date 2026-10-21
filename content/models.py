@@ -67,6 +67,12 @@ class SiteSettings(models.Model):
                 "Korea, open to students there and to any other developer.",
         help_text="Shown in the footer of every page.",
     )
+    poster_link = models.URLField(
+        default="https://discord.gg/kdudev",
+        help_text="Printed at the bottom of every talk poster, with a QR code for it. Posters "
+                  "are shared publicly, so this link is public, even though the site itself "
+                  "shows the Discord invite only to members.",
+    )
 
     class Meta:
         verbose_name = "site settings"

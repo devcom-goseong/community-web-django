@@ -51,6 +51,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     fieldsets = (
         ("The community", {"fields": ("community_name", "university", "country", "founded")}),
         ("Footer", {"fields": ("footer_blurb",)}),
+        ("Talk posters", {"fields": ("poster_link",)}),
     )
 
     def has_add_permission(self, request):

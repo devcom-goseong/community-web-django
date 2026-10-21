@@ -165,6 +165,8 @@ def robots(request):
         "Disallow: /api/",
         "Disallow: /account/",
         "Disallow: /members/",
+        "Disallow: /present/",
+        "Disallow: /media/",
         "",
         f"Sitemap: {request.build_absolute_uri('/sitemap.xml')}",
     ]

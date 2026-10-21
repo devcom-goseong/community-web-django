@@ -18,7 +18,8 @@
 
       <p class="lead mt-6">{{ event.summary }}</p>
 
-      <div class="panel mt-7">
+      <div class="panel mt-7{% if poster_url %} event-panel{% endif %}">
+        <div class="event-panel__main">
         <dl class="event-facts">
           <div><dt>When</dt><dd>{{ event.starts_at|date:"l j F Y, H:i" }}–{{ event.ends_at|date:"H:i T" }}</dd></div>
           {% if event.presenter %}<div><dt>Presented by</dt><dd>{{ event.presenter }}</dd></div>{% endif %}
@@ -69,6 +70,14 @@
             <a class="btn btn--ghost btn--plain" href="{% url 'events:calendar' event.slug %}">Add to calendar</a>
           {% endif %}
         </div>
+        </div>
+
+        {% if poster_url %}
+          <figure class="event-poster">
+            <a href="{{ poster_url }}" title="Open the poster full size"><img src="{{ poster_url }}" width="1240" height="1754" alt="The poster for {{ event.title }}{% if event.presenter %}, presented by {{ event.presenter }}{% endif %}"></a>
+            <figcaption class="small mt-2"><a href="{{ poster_url }}" download>Download</a></figcaption>
+          </figure>
+        {% endif %}
       </div>
 
       {% if event.description %}

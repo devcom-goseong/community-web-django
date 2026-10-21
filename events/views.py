@@ -1,7 +1,7 @@
 """The events list, an event's page, signing up, cancelling, and the calendar file."""
 
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -87,9 +87,20 @@ def event_detail(request, slug):
         else:
             unnamed += 1
 
+    poster = event.poster()
+    poster_url = event.poster_url(poster) if poster else ""
+    public = (event.visibility == Event.Visibility.PUBLIC
+              and event.status == Event.Status.PUBLISHED)
+
     context = base_context(request, event.title, event.summary, nav="events")
     context.update({
         "event": event,
+        "poster_url": poster_url,
+        # What a link to this page shows in a chat app. Only for a public
+        # event: a members-only poster is not for strangers' link previews.
+        "share_image": ({"url": request.build_absolute_uri(poster_url), "width": 1240,
+                         "height": 1754, "alt": f"The poster for {event.title}"}
+                        if poster and public else None),
         "registration": registration,
         "has_place": bool(registration and registration.status == Registration.Status.GOING),
         # Not "block": inside {% block content %} Django puts its own `block`
@@ -106,7 +117,7 @@ def event_detail(request, slug):
         "has_ended": event.has_ended(now),
         "can_cancel": bool(registration and not event.has_started(now)),
         # Rich-result data for a public event; empty for members-only or drafts.
-        "event_ld": event_ld(request, event),
+        "event_ld": event_ld(request, event, poster_url),
     })
     response = render(request, "events/detail.html", context)
     if event.visibility == Event.Visibility.MEMBERS or registration:
@@ -186,4 +197,24 @@ def event_calendar(request, slug):
         content_type="text/calendar; charset=utf-8",
     )
     response["Content-Disposition"] = f'attachment; filename="{event.slug}.ics"'
+    return response
+
+
+@require_GET
+def event_poster(request, slug):
+    """The event's approved poster, to anyone who may see the event.
+
+    Served from here rather than from a public folder so the event's own
+    visibility applies to it: a members-only event's poster is members-only,
+    and a poster nobody has approved yet is not served at all.
+    """
+    event = Event.objects.filter(slug=slug).first()
+    poster = event.poster() if event and event.visible_to(request.user) else None
+    if poster is None:
+        raise Http404("No poster")
+    response = FileResponse(poster.poster.open("rb"), content_type="image/png")
+    public = (event.visibility == Event.Visibility.PUBLIC
+              and event.status == Event.Status.PUBLISHED)
+    response["Cache-Control"] = "public, max-age=86400" if public else "private, max-age=600"
+    response["Content-Disposition"] = f'inline; filename="{event.slug}-poster.png"'
     return response

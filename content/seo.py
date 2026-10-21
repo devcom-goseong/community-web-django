@@ -90,11 +90,12 @@ def site_ld(request, site, same_as):
     return mark_safe(json.dumps(graph, ensure_ascii=False))
 
 
-def event_ld(request, event):
+def event_ld(request, event, poster_url=""):
     """schema.org/Event for a public, published event — otherwise nothing.
 
     The online link is deliberately left out: it is shown only to people who
-    have a place, so it must never travel in markup a crawler reads.
+    have a place, so it must never travel in markup a crawler reads. An
+    approved talk poster, when there is one, is the event's first image.
     """
     if event.visibility != Event.Visibility.PUBLIC or event.status != Event.Status.PUBLISHED:
         return ""
@@ -113,7 +114,8 @@ def event_ld(request, event):
                         else "https://schema.org/EventScheduled"),
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "url": _abs(request, event.get_absolute_url()),
-        "image": [_abs(request, static(path)) for path in EVENT_IMAGES],
+        "image": ([_abs(request, poster_url)] if poster_url else [])
+                 + [_abs(request, static(path)) for path in EVENT_IMAGES],
         "organizer": organizer,
         "performer": _performer(event, organizer),
         "offers": _offer(request, event),
