@@ -20,10 +20,10 @@ Do not hand-edit these files — the next run overwrites them.
 | File | Size | Where it appears |
 | --- | --- | --- |
 | `logo-mark.png` / `.webp` | 320 x 316 | The mark in the header, the bands and the footer |
-| `logo-mark-large.png` / `.webp` | 720 x 711 | The same mark for slides, print and the JSON-LD `logo` |
+| `logo-mark-large.png` / `.webp` | 720 x 711 | The same mark for slides, print, the JSON-LD `logo` and the square event `image` |
 | `banner.png` / `.webp` | 1600 x 569 | The wide lockup, wherever the full name is wanted as artwork |
 | `hand.png` / `.webp` | 894 x 1200 | The hero on the home page, and the 404 page |
-| `og-image.png` | 1200 x 630 | The social sharing card in every page's meta tags |
+| `og-image.png` | 1200 x 630 | The social sharing card in every page's meta tags, and the wide event `image` in the JSON-LD |
 
 ## Notes
 

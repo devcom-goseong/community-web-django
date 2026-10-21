@@ -13,13 +13,46 @@ never to show to anyone without a place — is never placed here either.
 import json
 
 from django.templatetags.static import static
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from events.models import Event
 
+# Events carry no picture of their own, so they use the site's share image (wide) and the
+# large logo (square): Google asks for an event image and prefers several aspect ratios.
+EVENT_IMAGES = ("assets/images/og-image.png", "assets/images/logo-mark-large.png")
+
+# Every event is free to attend; the community meets at Kyungdong University in Korea.
+PRICE_CURRENCY = "KRW"
+
 
 def _abs(request, path):
     return request.build_absolute_uri(path)
+
+
+def _offer(request, event):
+    """A free place at the event. Registering happens on the event's own page, so that is
+    the offer's url. Places are 'sold out' once the event is full, registration has closed
+    or the event has begun."""
+    open_now = timezone.now() < event.registration_deadline
+    spots = event.spots_left()
+    available = open_now and not event.is_cancelled and (spots is None or spots > 0)
+    return {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": PRICE_CURRENCY,
+        "availability": ("https://schema.org/InStock" if available
+                         else "https://schema.org/SoldOut"),
+        "url": _abs(request, event.get_absolute_url()),
+        "validFrom": event.created_at.isoformat(),
+    }
+
+
+def _performer(event, organizer):
+    """The presenter when the event names one, otherwise the community that runs it."""
+    if event.presenter:
+        return {"@type": "Person", "name": event.presenter}
+    return organizer
 
 
 def _organization(request, site, same_as):
@@ -68,6 +101,7 @@ def event_ld(request, event):
     from .models import SiteSettings
     site = SiteSettings.get()
     home = _abs(request, "/")
+    organizer = {"@type": "Organization", "name": site.community_name, "url": home}
     data = {
         "@context": "https://schema.org",
         "@type": "Event",
@@ -79,7 +113,10 @@ def event_ld(request, event):
                         else "https://schema.org/EventScheduled"),
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "url": _abs(request, event.get_absolute_url()),
-        "organizer": {"@type": "Organization", "name": site.community_name, "url": home},
+        "image": [_abs(request, static(path)) for path in EVENT_IMAGES],
+        "organizer": organizer,
+        "performer": _performer(event, organizer),
+        "offers": _offer(request, event),
         "location": {
             "@type": "Place",
             "name": event.location or site.university,

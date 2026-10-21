@@ -5,6 +5,7 @@ members-only event, and the online link that only attendees may see, must not
 be handed to a search engine.
 """
 
+import json
 from datetime import timedelta
 
 from django.test import RequestFactory, TestCase, override_settings
@@ -89,3 +90,52 @@ class StructuredDataTests(TestCase):
         rendered = event_ld(RequestFactory().get("/"), event)
         self.assertIn('"@type": "Event"', rendered)
         self.assertNotIn("meet.example.com", rendered)
+
+
+@override_settings(**TEST_SETTINGS)
+class EventRecommendedFieldsTests(TestCase):
+    """The fields Search Console asked for on event pages: image, offers and performer."""
+
+    def ld(self, event):
+        from content.seo import event_ld
+        return json.loads(event_ld(RequestFactory().get("/"), event))
+
+    def test_images_are_absolute_and_include_a_wide_and_a_square_one(self):
+        images = self.ld(_make_event())["image"]
+        self.assertEqual(images, [
+            "http://testserver/static/assets/images/og-image.png",
+            "http://testserver/static/assets/images/logo-mark-large.png",
+        ])
+
+    def test_the_offer_is_a_free_place_registered_for_on_the_event_page(self):
+        event = _make_event()
+        offer = self.ld(event)["offers"]
+        self.assertEqual(offer["@type"], "Offer")
+        self.assertEqual((offer["price"], offer["priceCurrency"]), ("0", "KRW"))
+        self.assertEqual(offer["availability"], "https://schema.org/InStock")
+        self.assertEqual(offer["url"], "http://testserver" + event.get_absolute_url())
+        self.assertEqual(offer["validFrom"], event.created_at.isoformat())
+
+    def test_no_places_left_reads_as_sold_out(self):
+        from accounts.factories import make_member
+        from events.models import Registration
+        full = _make_event(capacity=1)
+        Registration.objects.create(event=full, member=make_member("member"), status="going")
+        closed = _make_event(title="Closed", registration_closes_at=timezone.now() - timedelta(hours=1))
+        cancelled = _make_event(title="Off", status=Event.Status.CANCELLED)
+        for event in (full, closed):
+            with self.subTest(event=event.title):
+                self.assertEqual(self.ld(event)["offers"]["availability"],
+                                 "https://schema.org/SoldOut")
+        # A cancelled event is not public structured data at all (only published ones are).
+        from content.seo import event_ld
+        self.assertEqual(event_ld(RequestFactory().get("/"), cancelled), "")
+
+    def test_the_presenter_is_the_performer(self):
+        performer = self.ld(_make_event(presenter="Meshack Tirop"))["performer"]
+        self.assertEqual(performer, {"@type": "Person", "name": "Meshack Tirop"})
+
+    def test_without_a_presenter_the_community_performs(self):
+        data = self.ld(_make_event())
+        self.assertEqual(data["performer"], data["organizer"])
+        self.assertEqual(data["performer"]["@type"], "Organization")
